@@ -13,7 +13,7 @@ ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = player.PlayerGui
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 200, 0, 160)
+MainFrame.Size = UDim2.new(0, 220, 0, 200)
 MainFrame.Position = UDim2.new(0, 10, 0, 10)
 MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 MainFrame.BorderSizePixel = 0
@@ -34,7 +34,7 @@ Title.Size = UDim2.new(1, 0, 0, 25)
 Title.Position = UDim2.new(0, 0, 0, 0)
 Title.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 Title.TextColor3 = Color3.fromRGB(220, 220, 220)
-Title.Text = "NPC Assist"
+Title.Text = "NPC Assist v2"
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 12
 Title.Parent = MainFrame
@@ -46,7 +46,7 @@ TitleCorner.Parent = Title
 -- Toggle Fly
 local FlyToggle = Instance.new("TextButton")
 FlyToggle.Size = UDim2.new(0.9, 0, 0, 25)
-FlyToggle.Position = UDim2.new(0.05, 0, 0.2, 0)
+FlyToggle.Position = UDim2.new(0.05, 0, 0.18, 0)
 FlyToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
 FlyToggle.TextColor3 = Color3.fromRGB(220, 220, 220)
 FlyToggle.Text = "FLY: OFF"
@@ -61,7 +61,7 @@ FlyCorner.Parent = FlyToggle
 -- Textbox độ cao
 local HeightBox = Instance.new("TextBox")
 HeightBox.Size = UDim2.new(0.4, 0, 0, 25)
-HeightBox.Position = UDim2.new(0.05, 0, 0.4, 0)
+HeightBox.Position = UDim2.new(0.05, 0, 0.35, 0)
 HeightBox.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
 HeightBox.TextColor3 = Color3.fromRGB(220, 220, 220)
 HeightBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
@@ -78,7 +78,7 @@ HeightCorner.Parent = HeightBox
 -- Label độ cao
 local HeightLabel = Instance.new("TextLabel")
 HeightLabel.Size = UDim2.new(0.5, 0, 0, 25)
-HeightLabel.Position = UDim2.new(0.5, 0, 0.4, 0)
+HeightLabel.Position = UDim2.new(0.5, 0, 0.35, 0)
 HeightLabel.BackgroundTransparency = 1
 HeightLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
 HeightLabel.Text = "Studs"
@@ -90,7 +90,7 @@ HeightLabel.Parent = MainFrame
 -- Toggle Auto Tool
 local ToolToggle = Instance.new("TextButton")
 ToolToggle.Size = UDim2.new(0.9, 0, 0, 25)
-ToolToggle.Position = UDim2.new(0.05, 0, 0.6, 0)
+ToolToggle.Position = UDim2.new(0.05, 0, 0.52, 0)
 ToolToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
 ToolToggle.TextColor3 = Color3.fromRGB(220, 220, 220)
 ToolToggle.Text = "AUTO TOOL: OFF"
@@ -102,10 +102,25 @@ local ToolCorner = Instance.new("UICorner")
 ToolCorner.CornerRadius = UDim.new(0, 6)
 ToolCorner.Parent = ToolToggle
 
+-- Toggle Áp chế NPC
+local CrushToggle = Instance.new("TextButton")
+CrushToggle.Size = UDim2.new(0.9, 0, 0, 25)
+CrushToggle.Position = UDim2.new(0.05, 0, 0.69, 0)
+CrushToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+CrushToggle.TextColor3 = Color3.fromRGB(220, 220, 220)
+CrushToggle.Text = "ÁP CHẾ NPC: OFF"
+CrushToggle.Font = Enum.Font.Gotham
+CrushToggle.TextSize = 11
+CrushToggle.Parent = MainFrame
+
+local CrushCorner = Instance.new("UICorner")
+CrushCorner.CornerRadius = UDim.new(0, 6)
+CrushCorner.Parent = CrushToggle
+
 -- Status Label
 local StatusLabel = Instance.new("TextLabel")
 StatusLabel.Size = UDim2.new(0.9, 0, 0, 25)
-StatusLabel.Position = UDim2.new(0.05, 0, 0.8, 0)
+StatusLabel.Position = UDim2.new(0.05, 0, 0.86, 0)
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
 StatusLabel.Text = "Đang chờ..."
@@ -117,9 +132,11 @@ StatusLabel.Parent = MainFrame
 -- Biến điều khiển
 local isFlying = false
 local isAutoTool = false
+local isCrushing = false
 local currentHeight = 10
 local flyConnection = nil
 local toolConnection = nil
+local crushConnection = nil
 
 -- Hiệu ứng hover cho buttons
 local function setupButtonHover(button)
@@ -127,6 +144,8 @@ local function setupButtonHover(button)
         if button == FlyToggle and not isFlying then
             TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 65)}):Play()
         elseif button == ToolToggle and not isAutoTool then
+            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 65)}):Play()
+        elseif button == CrushToggle and not isCrushing then
             TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 65)}):Play()
         end
     end)
@@ -136,12 +155,15 @@ local function setupButtonHover(button)
             TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 55)}):Play()
         elseif button == ToolToggle and not isAutoTool then
             TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 55)}):Play()
+        elseif button == CrushToggle and not isCrushing then
+            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 55)}):Play()
         end
     end)
 end
 
 setupButtonHover(FlyToggle)
 setupButtonHover(ToolToggle)
+setupButtonHover(CrushToggle)
 
 -- Hàm tìm boss
 function findNearestNPC()
@@ -236,6 +258,64 @@ function useToolAutomatically()
     end
 end
 
+-- Hàm áp chế NPC (làm NPC lún xuống)
+function crushNPC()
+    local npc = findNearestNPC()
+    if not npc then 
+        StatusLabel.Text = "Không tìm thấy NPC để áp chế"
+        return false 
+    end
+    
+    local npcRoot = npc:FindFirstChild("HumanoidRootPart") or npc:FindFirstChild("Head") or npc:FindFirstChild("Torso")
+    if not npcRoot then 
+        StatusLabel.Text = "NPC không có root part"
+        return false 
+    end
+    
+    -- Tạo lực đẩy NPC xuống đất
+    local bodyVelocity = npcRoot:FindFirstChild("CrushVelocity")
+    if not bodyVelocity then
+        bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.Name = "CrushVelocity"
+        bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
+        bodyVelocity.Velocity = Vector3.new(0, -50, 0) -- Lực đẩy xuống mạnh
+        bodyVelocity.Parent = npcRoot
+    else
+        bodyVelocity.Velocity = Vector3.new(0, -50, 0)
+    end
+    
+    -- Thêm BodyForce để tăng hiệu ứng lún
+    local bodyForce = npcRoot:FindFirstChild("CrushForce")
+    if not bodyForce then
+        bodyForce = Instance.new("BodyForce")
+        bodyForce.Name = "CrushForce"
+        bodyForce.Force = Vector3.new(0, -1000, 0) -- Lực hướng xuống
+        bodyForce.Parent = npcRoot
+    end
+    
+    StatusLabel.Text = "Đang áp chế NPC..."
+    return true
+end
+
+-- Hàm dừng áp chế NPC
+function stopCrushingNPC()
+    local npc = findNearestNPC()
+    if npc then
+        local npcRoot = npc:FindFirstChild("HumanoidRootPart") or npc:FindFirstChild("Head") or npc:FindFirstChild("Torso")
+        if npcRoot then
+            local bodyVelocity = npcRoot:FindFirstChild("CrushVelocity")
+            local bodyForce = npcRoot:FindFirstChild("CrushForce")
+            
+            if bodyVelocity then
+                bodyVelocity:Destroy()
+            end
+            if bodyForce then
+                bodyForce:Destroy()
+            end
+        end
+    end
+end
+
 -- Hàm bắt đầu bay
 function startFlying()
     if flyConnection then
@@ -258,6 +338,31 @@ function stopFlying()
         flyConnection = nil
     end
     StatusLabel.Text = "Đã dừng bay"
+end
+
+-- Hàm bắt đầu áp chế
+function startCrushing()
+    if crushConnection then
+        crushConnection:Disconnect()
+        crushConnection = nil
+    end
+    
+    crushConnection = RunService.Heartbeat:Connect(function()
+        local success = crushNPC()
+        if not success then
+            StatusLabel.Text = "Lỗi khi áp chế"
+        end
+    end)
+end
+
+-- Hàm dừng áp chế
+function stopCrushing()
+    if crushConnection then
+        crushConnection:Disconnect()
+        crushConnection = nil
+    end
+    stopCrushingNPC()
+    StatusLabel.Text = "Đã dừng áp chế"
 end
 
 -- Sự kiện Fly Toggle
@@ -312,6 +417,32 @@ ToolToggle.MouseButton1Click:Connect(function()
     end
 end)
 
+-- Sự kiện Áp chế Toggle
+CrushToggle.MouseButton1Click:Connect(function()
+    isCrushing = not isCrushing
+    
+    if isCrushing then
+        -- Bật áp chế
+        local success = pcall(function()
+            CrushToggle.BackgroundColor3 = Color3.fromRGB(180, 60, 0)
+            CrushToggle.Text = "ÁP CHẾ NPC: ON"
+            startCrushing()
+        end)
+        
+        if not success then
+            isCrushing = false
+            CrushToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+            CrushToggle.Text = "ÁP CHẾ NPC: OFF"
+            StatusLabel.Text = "Lỗi khi bật áp chế"
+        end
+    else
+        -- Tắt áp chế
+        CrushToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+        CrushToggle.Text = "ÁP CHẾ NPC: OFF"
+        stopCrushing()
+    end
+end)
+
 -- Xử lý textbox độ cao
 HeightBox.FocusLost:Connect(function(enterPressed)
     local newHeight = tonumber(HeightBox.Text)
@@ -344,6 +475,13 @@ player.CharacterAdded:Connect(function(newCharacter)
             toolConnection:Disconnect()
             toolConnection = nil
         end
+    end
+    
+    if isCrushing then
+        isCrushing = false
+        CrushToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+        CrushToggle.Text = "ÁP CHẾ NPC: OFF"
+        stopCrushing()
     end
 end)
 
