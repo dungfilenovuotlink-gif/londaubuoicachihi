@@ -1,586 +1,226 @@
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local StatsService = game:GetService("Stats")
+local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-local EliteControlGui = {
-    ScreenGui = nil,
-    MainFrame = nil,
-    ToggleButton = nil,
-    Initialized = false,
-    FPSConnection = nil,
-    GuiVisible = false,
-    CleanedParts = {}
-}
+-- Tạo GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = player.PlayerGui
 
-local function cleanupOldGUI()
-    local playerGui = player:FindFirstChild("PlayerGui")
-    if playerGui then
-        local oldGui = playerGui:FindFirstChild("EliteControlGui")
-        if oldGui then
-            oldGui:Destroy()
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 300, 0, 200)
+Frame.Position = UDim2.new(0, 10, 0, 10)
+Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Frame.BorderSizePixel = 0
+Frame.Parent = ScreenGui
+
+-- Tiêu đề
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Text = "NPC Controller"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 14
+Title.Parent = Frame
+
+-- Nút bay lên
+local FlyButton = Instance.new("TextButton")
+FlyButton.Size = UDim2.new(0.9, 0, 0, 30)
+FlyButton.Position = UDim2.new(0.05, 0, 0.2, 0)
+FlyButton.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+FlyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+FlyButton.Text = "Bay lên đầu NPCs"
+FlyButton.Font = Enum.Font.Gotham
+FlyButton.TextSize = 12
+FlyButton.Parent = Frame
+
+-- Thanh trượt độ cao
+local HeightLabel = Instance.new("TextLabel")
+HeightLabel.Size = UDim2.new(0.9, 0, 0, 20)
+HeightLabel.Position = UDim2.new(0.05, 0, 0.4, 0)
+HeightLabel.BackgroundTransparency = 1
+HeightLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+HeightLabel.Text = "Độ cao: 10"
+HeightLabel.Font = Enum.Font.Gotham
+HeightLabel.TextSize = 12
+HeightLabel.TextXAlignment = Enum.TextXAlignment.Left
+HeightLabel.Parent = Frame
+
+local HeightSlider = Instance.new("SliderGui")
+HeightSlider.Size = UDim2.new(0.9, 0, 0, 20)
+HeightSlider.Position = UDim2.new(0.05, 0, 0.55, 0)
+HeightSlider.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+HeightSlider.BorderSizePixel = 0
+HeightSlider.Parent = Frame
+
+local SliderBar = Instance.new("Frame")
+SliderBar.Size = UDim2.new(0.5, 0, 1, 0)
+SliderBar.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+SliderBar.BorderSizePixel = 0
+SliderBar.Parent = HeightSlider
+
+local SliderButton = Instance.new("TextButton")
+SliderButton.Size = UDim2.new(0, 20, 1, 0)
+SliderButton.Position = UDim2.new(0.5, -10, 0, 0)
+SliderButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+SliderButton.Text = ""
+SliderButton.Parent = HeightSlider
+
+-- Toggle Auto Tool
+local AutoToolToggle = Instance.new("TextButton")
+AutoToolToggle.Size = UDim2.new(0.9, 0, 0, 30)
+AutoToolToggle.Position = UDim2.new(0.05, 0, 0.75, 0)
+AutoToolToggle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+AutoToolToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoToolToggle.Text = "Auto Tool: TẮT"
+AutoToolToggle.Font = Enum.Font.Gotham
+AutoToolToggle.TextSize = 12
+AutoToolToggle.Parent = Frame
+
+-- Biến điều khiển
+local isFlying = false
+local currentHeight = 10
+local isAutoToolEnabled = false
+local flyConnection = nil
+local autoToolConnection = nil
+
+-- Hàm tìm NPC gần nhất
+function findNearestNPC()
+    local npcsFolder = workspace:FindFirstChild("giangho2")
+    if not npcsFolder then return nil end
+    
+    npcsFolder = npcsFolder:FindFirstChild("npcs")
+    if not npcsFolder then return nil end
+    
+    local nearestNPC = nil
+    local nearestDistance = math.huge
+    
+    for _, npc in pairs(npcsFolder:GetChildren()) do
+        local humanoidRootPart = npc:FindFirstChild("HumanoidRootPart")
+        if humanoidRootPart then
+            local distance = (humanoidRootPart.Position - humanoidRootPart.Position).Magnitude
+            if distance < nearestDistance then
+                nearestDistance = distance
+                nearestNPC = npc
+            end
         end
-        local oldToggle = playerGui:FindFirstChild("EliteControlToggle")
-        if oldToggle then
-            oldToggle:Destroy()
-        end
-        local oldContainer = playerGui:FindFirstChild("EliteControlContainer")
-        if oldContainer then
-            oldContainer:Destroy()
+    end
+    
+    return nearestNPC
+end
+
+-- Hàm bay đến NPC
+function flyToNPC()
+    local npc = findNearestNPC()
+    if not npc then return end
+    
+    local npcRoot = npc:FindFirstChild("HumanoidRootPart")
+    if not npcRoot then return end
+    
+    local targetPosition = npcRoot.Position + Vector3.new(0, currentHeight, 0)
+    
+    -- Di chuyển nhân vật
+    humanoidRootPart.CFrame = CFrame.new(targetPosition)
+    
+    -- Aim xuống NPC
+    humanoidRootPart.CFrame = CFrame.new(targetPosition, npcRoot.Position)
+end
+
+-- Hàm sử dụng tool tự động
+function useToolAutomatically()
+    local tool = character:FindFirstChildOfClass("Tool")
+    if tool then
+        -- Kích hoạt tool (giả sử tool có remote event hoặc function)
+        local handle = tool:FindFirstChild("Handle")
+        if handle then
+            -- Đây là nơi bạn sẽ thêm logic kích hoạt tool cụ thể
+            -- Tùy thuộc vào cách tool được thiết kế
+            print("Đang sử dụng tool: " .. tool.Name)
         end
     end
 end
 
-local function createMainGUI()
-    cleanupOldGUI()
-    
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "EliteControlGui"
-    ScreenGui.ResetOnSpawn = false
-    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    ScreenGui.IgnoreGuiInset = true
-    
-    local BlurEffect = Instance.new("BlurEffect")
-    BlurEffect.Size = 0
-    BlurEffect.Parent = game.Lighting
+-- Sự kiện cho thanh trượt độ cao
+local isDragging = false
 
-    local MainFrame = Instance.new("Frame")
-    MainFrame.Size = UDim2.new(0, 320, 0, 380)
-    MainFrame.Position = UDim2.new(0, 100, 0, 60)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-    MainFrame.BackgroundTransparency = 0.1
-    MainFrame.BorderSizePixel = 0
-    MainFrame.ClipsDescendants = true
-    MainFrame.ZIndex = 60
-    MainFrame.Visible = false
-    MainFrame.Parent = ScreenGui
+SliderButton.MouseButton1Down:Connect(function()
+    isDragging = true
+end)
 
-    local Shadow = Instance.new("ImageLabel")
-    Shadow.Name = "Shadow"
-    Shadow.Image = "rbxassetid://5554236805"
-    Shadow.ScaleType = Enum.ScaleType.Slice
-    Shadow.SliceCenter = Rect.new(23, 23, 277, 277)
-    Shadow.ImageTransparency = 0.5
-    Shadow.Size = UDim2.new(1, 30, 1, 30)
-    Shadow.Position = UDim2.new(0, -15, 0, -15)
-    Shadow.BackgroundTransparency = 1
-    Shadow.ZIndex = 59
-    Shadow.Parent = MainFrame
-
-    local UICorner = Instance.new("UICorner", MainFrame)
-    UICorner.CornerRadius = UDim.new(0, 15)
-
-    local UIStroke = Instance.new("UIStroke", MainFrame)
-    UIStroke.Thickness = 1.5
-    UIStroke.Color = Color3.fromRGB(170, 120, 255)
-    UIStroke.Transparency = 0.4
-
-    local Header = Instance.new("Frame", MainFrame)
-    Header.Size = UDim2.new(1, 0, 0, 45)
-    Header.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
-    Header.BorderSizePixel = 0
-    Header.Active = true
-    Header.Selectable = true
-
-    local HeaderGradient = Instance.new("UIGradient")
-    HeaderGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(70, 50, 120)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 40, 55))
-    })
-    HeaderGradient.Rotation = -15
-    HeaderGradient.Parent = Header
-
-    local HeaderCorner = Instance.new("UICorner", Header)
-    HeaderCorner.CornerRadius = UDim.new(0, 15)
-
-    local Title = Instance.new("TextLabel", Header)
-    Title.Text = "PHONG ĐẦN"
-    Title.Font = Enum.Font.GothamBold
-    Title.TextSize = 18
-    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.BackgroundTransparency = 1
-    Title.Position = UDim2.new(0, 15, 0, 0)
-    Title.Size = UDim2.new(1, -20, 1, 0)
-    Title.TextXAlignment = Enum.TextXAlignment.Left
-
-    local Subtitle = Instance.new("TextLabel", Header)
-    Subtitle.Text = "make riêng by renx"
-    Subtitle.Font = Enum.Font.Gotham
-    Subtitle.TextSize = 12
-    Subtitle.TextColor3 = Color3.fromRGB(200, 180, 255)
-    Subtitle.BackgroundTransparency = 1
-    Subtitle.Position = UDim2.new(0, 15, 0, 22)
-    Subtitle.Size = UDim2.new(1, -20, 0, 20)
-    Subtitle.TextXAlignment = Enum.TextXAlignment.Left
-
-    local fpsHeaderLabel = Instance.new("TextLabel", Header)
-    fpsHeaderLabel.Size = UDim2.new(0, 100, 0, 20)
-    fpsHeaderLabel.Position = UDim2.new(1, -110, 0, 12)
-    fpsHeaderLabel.BackgroundTransparency = 1
-    fpsHeaderLabel.TextColor3 = Color3.fromRGB(180, 255, 180)
-    fpsHeaderLabel.Font = Enum.Font.GothamBold
-    fpsHeaderLabel.TextSize = 12
-    fpsHeaderLabel.Text = "FPS: 0 | Ping: 0"
-    fpsHeaderLabel.TextXAlignment = Enum.TextXAlignment.Right
-    fpsHeaderLabel.Visible = true
-
-    local ToggleContainer = Instance.new("ScrollingFrame", MainFrame)
-    ToggleContainer.Size = UDim2.new(1, -20, 1, -70)
-    ToggleContainer.Position = UDim2.new(0, 10, 0, 55)
-    ToggleContainer.BackgroundTransparency = 1
-    ToggleContainer.ScrollBarThickness = 6
-    ToggleContainer.ScrollBarImageColor3 = Color3.fromRGB(120, 100, 180)
-    ToggleContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
-    ToggleContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
-
-    local UIListLayout = Instance.new("UIListLayout", ToggleContainer)
-    UIListLayout.Padding = UDim.new(0, 12)
-    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-    local dragging = false
-    local dragStart, startPos
-
-    Header.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = MainFrame.Position
-            TweenService:Create(Header, TweenInfo.new(0.1), {BackgroundTransparency = 0.2}):Play()
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
-            MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-            TweenService:Create(Header, TweenInfo.new(0.1), {BackgroundTransparency = 0}):Play()
-        end
-    end)
-
-    local lastUpdate = os.clock()
-    local frames = 0
-
-    local function updateFPS()
-        frames = frames + 1
-        if os.clock() - lastUpdate >= 0.5 then
-            local fps = frames * 2
-            frames = 0
-            lastUpdate = os.clock()
-            
-            local ping = "0"
-            local success = pcall(function()
-                local stats = StatsService:FindFirstChild("Network")
-                if stats then
-                    ping = tostring(math.floor(stats.ServerStatsItem["Data Ping"]:GetValue()))
-                end
-            end)
-            
-            if not success then
-                ping = "N/A"
-            end
-            
-            fpsHeaderLabel.Text = "FPS: " .. fps .. " | " .. ping .. "ms"
-        end
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        isDragging = false
     end
+end)
 
-    local fpsConnection = RunService.RenderStepped:Connect(updateFPS)
-
-    local WhiteScreen = Instance.new("Frame", ScreenGui)
-    WhiteScreen.Size = UDim2.new(1, 0, 1, 0)
-    WhiteScreen.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    WhiteScreen.BackgroundTransparency = 1
-    WhiteScreen.Visible = false
-    WhiteScreen.ZIndex = 50
-
-    local originalProperties = {}
-
-    local function cleanMap(hide)
-        if hide then
-            originalProperties = {}
-            
-            for _, obj in pairs(workspace:GetDescendants()) do
-                if obj:IsA("BasePart") and obj ~= player.Character and not obj:IsDescendantOf(player.Character) then
-                    originalProperties[obj] = {
-                        Transparency = obj.Transparency,
-                        Material = obj.Material,
-                        CanCollide = obj.CanCollide
-                    }
-                    
-                    obj.Transparency = 0.8
-                    obj.CanCollide = true
-                    
-                    if obj.Material == Enum.Material.Neon or obj.Material == Enum.Material.Glass then
-                        obj.Material = Enum.Material.Plastic
-                    end
-                    
-                elseif obj:IsA("ParticleEmitter") then
-                    originalProperties[obj] = {Enabled = obj.Enabled}
-                    obj.Enabled = false
-                elseif obj:IsA("Fire") or obj:IsA("Smoke") then
-                    originalProperties[obj] = {Enabled = obj.Enabled}
-                    obj.Enabled = false
-                elseif obj:IsA("Decal") then
-                    originalProperties[obj] = {Transparency = obj.Transparency}
-                    obj.Transparency = 1
-                elseif obj:IsA("Sound") then
-                    originalProperties[obj] = {Volume = obj.Volume}
-                    obj.Volume = 0
-                end
-            end
-            
-            pcall(function()
-                game.Lighting.GlobalShadows = false
-                game.Lighting.FogEnd = 999999
-            end)
-            
-        else
-            for obj, properties in pairs(originalProperties) do
-                if obj and obj.Parent then
-                    for prop, value in pairs(properties) do
-                        pcall(function()
-                            obj[prop] = value
-                        end)
-                    end
-                end
-            end
-            
-            pcall(function()
-                game.Lighting.GlobalShadows = true
-                game.Lighting.FogEnd = 1000000
-            end)
-            
-            originalProperties = {}
-        end
+UserInputService.InputChanged:Connect(function(input)
+    if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local sliderPosition = math.clamp((input.Position.X - HeightSlider.AbsolutePosition.X) / HeightSlider.AbsoluteSize.X, 0, 1)
+        SliderBar.Size = UDim2.new(sliderPosition, 0, 1, 0)
+        SliderButton.Position = UDim2.new(sliderPosition, -10, 0, 0)
+        
+        currentHeight = 5 + (sliderPosition * 25) -- Độ cao từ 5 đến 30
+        HeightLabel.Text = "Độ cao: " .. math.floor(currentHeight)
     end
+end)
 
-    local function createToggle(name, desc, func)
-        local button = Instance.new("TextButton", ToggleContainer)
-        button.Size = UDim2.new(1, 0, 0, 65)
-        button.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
-        button.BorderSizePixel = 0
-        button.Text = ""
-        button.AutoButtonColor = false
+-- Sự kiện nút bay
+FlyButton.MouseButton1Click:Connect(function()
+    if isFlying then
+        -- Dừng bay
+        isFlying = false
+        if flyConnection then
+            flyConnection:Disconnect()
+            flyConnection = nil
+        end
+        FlyButton.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+        FlyButton.Text = "Bay lên đầu NPCs"
+    else
+        -- Bắt đầu bay
+        isFlying = true
+        FlyButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        FlyButton.Text = "DỪNG BAY"
         
-        local corner = Instance.new("UICorner", button)
-        corner.CornerRadius = UDim.new(0, 10)
-        
-        local buttonStroke = Instance.new("UIStroke", button)
-        buttonStroke.Thickness = 1
-        buttonStroke.Color = Color3.fromRGB(80, 70, 110)
-        buttonStroke.Transparency = 0.7
-        
-        local buttonGradient = Instance.new("UIGradient")
-        buttonGradient.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 50, 70)),
-            ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 40, 60))
-        })
-        buttonGradient.Parent = button
-        
-        button.MouseEnter:Connect(function()
-            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(55, 55, 80)}):Play()
-            TweenService:Create(buttonStroke, TweenInfo.new(0.2), {Transparency = 0.4}):Play()
+        flyConnection = RunService.Heartbeat:Connect(function()
+            flyToNPC()
         end)
+    end
+end)
+
+-- Sự kiện toggle auto tool
+AutoToolToggle.MouseButton1Click:Connect(function()
+    if isAutoToolEnabled then
+        -- Tắt auto tool
+        isAutoToolEnabled = false
+        if autoToolConnection then
+            autoToolConnection:Disconnect()
+            autoToolConnection = nil
+        end
+        AutoToolToggle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+        AutoToolToggle.Text = "Auto Tool: TẮT"
+    else
+        -- Bật auto tool
+        isAutoToolEnabled = true
+        AutoToolToggle.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+        AutoToolToggle.Text = "Auto Tool: BẬT"
         
-        button.MouseLeave:Connect(function()
-            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(45, 45, 65)}):Play()
-            TweenService:Create(buttonStroke, TweenInfo.new(0.2), {Transparency = 0.7}):Play()
-        end)
-        
-        local title = Instance.new("TextLabel", button)
-        title.BackgroundTransparency = 1
-        title.Position = UDim2.new(0, 15, 0, 12)
-        title.Size = UDim2.new(0.7, -20, 0, 20)
-        title.Text = name
-        title.TextColor3 = Color3.fromRGB(255, 255, 255)
-        title.Font = Enum.Font.GothamBold
-        title.TextSize = 16
-        title.TextXAlignment = Enum.TextXAlignment.Left
-        
-        local subtitle = Instance.new("TextLabel", button)
-        subtitle.BackgroundTransparency = 1
-        subtitle.Position = UDim2.new(0, 15, 0, 32)
-        subtitle.Size = UDim2.new(0.7, -20, 0, 25)
-        subtitle.Text = desc
-        subtitle.TextColor3 = Color3.fromRGB(180, 180, 220)
-        subtitle.Font = Enum.Font.Gotham
-        subtitle.TextSize = 12
-        subtitle.TextXAlignment = Enum.TextXAlignment.Left
-        subtitle.TextWrapped = true
-        
-        local toggle = Instance.new("Frame", button)
-        toggle.Size = UDim2.new(0, 50, 0, 26)
-        toggle.Position = UDim2.new(1, -65, 0.5, -13)
-        toggle.BackgroundColor3 = Color3.fromRGB(70, 70, 100)
-        toggle.BorderSizePixel = 0
-        
-        local toggleCorner = Instance.new("UICorner", toggle)
-        toggleCorner.CornerRadius = UDim.new(0, 13)
-        
-        local knob = Instance.new("Frame", toggle)
-        knob.Size = UDim2.new(0, 20, 0, 20)
-        knob.Position = UDim2.new(0, 3, 0, 3)
-        knob.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
-        knob.BorderSizePixel = 0
-        
-        local knobCorner = Instance.new("UICorner", knob)
-        knobCorner.CornerRadius = UDim.new(1, 0)
-        
-        local knobShadow = Instance.new("ImageLabel", knob)
-        knobShadow.Image = "rbxassetid://5554236805"
-        knobShadow.ScaleType = Enum.ScaleType.Slice
-        knobShadow.SliceCenter = Rect.new(23, 23, 277, 277)
-        knobShadow.ImageTransparency = 0.7
-        knobShadow.Size = UDim2.new(1, 6, 1, 6)
-        knobShadow.Position = UDim2.new(0, -3, 0, -3)
-        knobShadow.BackgroundTransparency = 1
-        knobShadow.ZIndex = -1
-        
-        local on = false
-        
-        button.MouseButton1Click:Connect(function()
-            on = not on
-            
-            TweenService:Create(button, TweenInfo.new(0.1), {Size = UDim2.new(0.98, 0, 0, 63)}):Play()
-            wait(0.1)
-            TweenService:Create(button, TweenInfo.new(0.1), {Size = UDim2.new(1, 0, 0, 65)}):Play()
-            
-            if on then
-                TweenService:Create(knob, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0, 27, 0, 3)}):Play()
-                TweenService:Create(toggle, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(120, 80, 200)}):Play()
-                TweenService:Create(knob, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(200, 180, 255)}):Play()
-            else
-                TweenService:Create(knob, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0, 3, 0, 3)}):Play()
-                TweenService:Create(toggle, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(70, 70, 100)}):Play()
-                TweenService:Create(knob, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(240, 240, 240)}):Play()
-            end
-            
-            if func then 
-                pcall(func, on) 
+        autoToolConnection = RunService.Heartbeat:Connect(function()
+            if isFlying then
+                useToolAutomatically()
             end
         end)
-        
-        return button
     end
+end)
 
-    createToggle("Anti Lag", "xoá hiệu ứng", function(on)
-        if on then
-            pcall(function() 
-                game.Lighting.GlobalShadows = false 
-                game.Lighting.FogEnd = 100000
-            end)
-            for _, v in pairs(workspace:GetDescendants()) do
-                if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Smoke") then 
-                    pcall(function() v.Enabled = false end) 
-                end
-                if v:IsA("Sound") then 
-                    pcall(function() v.Volume = 0 end) 
-                end
-                if v:IsA("Decal") or v:IsA("Texture") then 
-                    pcall(function() v.Transparency = 1 end) 
-                end
-            end
-        else
-            pcall(function() 
-                game.Lighting.GlobalShadows = true 
-                game.Lighting.FogEnd = 1000000
-            end)
-            for _, v in pairs(workspace:GetDescendants()) do
-                if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Smoke") then 
-                    pcall(function() v.Enabled = true end) 
-                end
-                if v:IsA("Sound") then 
-                    pcall(function() v.Volume = 1 end) 
-                end
-                if v:IsA("Decal") or v:IsA("Texture") then 
-                    pcall(function() v.Transparency = 0 end) 
-                end
-            end
-        end
-    end)
+-- Xử lý khi character respawn
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+end)
 
-    createToggle("Anti RAM", "Giải phóng bộ nhớ", function(on)
-        if on then
-            task.defer(function()
-                collectgarbage("collect")
-                for _, v in pairs(workspace:GetDescendants()) do
-                    if v:IsA("MeshPart") then 
-                        pcall(function() v.TextureID = "" end) 
-                    end
-                end
-                collectgarbage("collect")
-            end)
-        end
-    end)
-
-    createToggle("Anti AFK", "để tránh kick khi treo quá 20p", function(on)
-        local antiAFKActive = on
-        if on then
-            task.spawn(function()
-                while antiAFKActive do
-                    task.wait(1080)
-                    if not antiAFKActive then 
-                        break 
-                    end
-                    pcall(function()
-                        game:GetService("VirtualInputManager"):SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                        game:GetService("VirtualInputManager"):SendMouseButtonEvent(0, 0, 0, false, game, 0)
-                    end)
-                end
-            end)
-        end
-    end)
-
-    createToggle("White Screen", "màn hình trắng để treo", function(on)
-        if on then
-            WhiteScreen.Visible = true
-            TweenService:Create(WhiteScreen, TweenInfo.new(0.5), {BackgroundTransparency = 0}):Play()
-            TweenService:Create(BlurEffect, TweenInfo.new(0.5), {Size = 10}):Play()
-        else
-            TweenService:Create(WhiteScreen, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
-            TweenService:Create(BlurEffect, TweenInfo.new(0.5), {Size = 0}):Play()
-            wait(0.5)
-            WhiteScreen.Visible = false
-        end
-    end)
-
-    createToggle("Clean Map", "Ẩn map để giảm lag", function(on)
-        cleanMap(on)
-    end)
-
-    EliteControlGui.ScreenGui = ScreenGui
-    EliteControlGui.MainFrame = MainFrame
-    EliteControlGui.FPSConnection = fpsConnection
-    EliteControlGui.FPSLabel = fpsHeaderLabel
-    
-    return ScreenGui, MainFrame
-end
-
-local function createToggleButton()
-    local ToggleButton = Instance.new("ImageButton")
-    ToggleButton.Name = "EliteControlToggle"
-    ToggleButton.Size = UDim2.new(0, 55, 0, 55)
-    ToggleButton.Position = UDim2.new(0, 20, 0, 20)
-    ToggleButton.BackgroundColor3 = Color3.fromRGB(100, 70, 170)
-    ToggleButton.Image = "rbxassetid://3926305904"
-    ToggleButton.ImageRectOffset = Vector2.new(964, 324)
-    ToggleButton.ImageRectSize = Vector2.new(36, 36)
-    ToggleButton.ZIndex = 100
-
-    local ToggleCorner = Instance.new("UICorner", ToggleButton)
-    ToggleCorner.CornerRadius = UDim.new(0, 15)
-
-    local ToggleShadow = Instance.new("ImageLabel", ToggleButton)
-    ToggleShadow.Image = "rbxassetid://5554236805"
-    ToggleShadow.ScaleType = Enum.ScaleType.Slice
-    ToggleShadow.SliceCenter = Rect.new(23, 23, 277, 277)
-    ToggleShadow.ImageTransparency = 0.6
-    ToggleShadow.Size = UDim2.new(1, 10, 1, 10)
-    ToggleShadow.Position = UDim2.new(0, -5, 0, -5)
-    ToggleShadow.BackgroundTransparency = 1
-    ToggleShadow.ZIndex = 99
-
-    ToggleButton.MouseEnter:Connect(function()
-        TweenService:Create(ToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(120, 90, 200)}):Play()
-        TweenService:Create(ToggleButton, TweenInfo.new(0.2), {Size = UDim2.new(0, 58, 0, 58)}):Play()
-    end)
-
-    ToggleButton.MouseLeave:Connect(function()
-        TweenService:Create(ToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(100, 70, 170)}):Play()
-        TweenService:Create(ToggleButton, TweenInfo.new(0.2), {Size = UDim2.new(0, 55, 0, 55)}):Play()
-    end)
-
-    ToggleButton.MouseButton1Click:Connect(function()
-        EliteControlGui.GuiVisible = not EliteControlGui.GuiVisible
-        
-        TweenService:Create(ToggleButton, TweenInfo.new(0.1), {Size = UDim2.new(0, 52, 0, 52)}):Play()
-        wait(0.1)
-        TweenService:Create(ToggleButton, TweenInfo.new(0.1), {Size = UDim2.new(0, 55, 0, 55)}):Play()
-        
-        if EliteControlGui.GuiVisible then
-            if not EliteControlGui.MainFrame or not EliteControlGui.MainFrame.Parent then
-                createMainGUI()
-                EliteControlGui.ScreenGui.Parent = player.PlayerGui
-                EliteControlGui.MainFrame.Visible = true
-            else
-                EliteControlGui.MainFrame.Visible = true
-                TweenService:Create(EliteControlGui.MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0, 100, 0, 60)}):Play()
-                TweenService:Create(EliteControlGui.MainFrame, TweenInfo.new(0.3), {BackgroundTransparency = 0.1}):Play()
-            end
-        else
-            if EliteControlGui.MainFrame then
-                TweenService:Create(EliteControlGui.MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Position = UDim2.new(0, -350, 0, 60)}):Play()
-                TweenService:Create(EliteControlGui.MainFrame, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
-                wait(0.3)
-                EliteControlGui.MainFrame.Visible = false
-            end
-        end
-    end)
-    
-    EliteControlGui.ToggleButton = ToggleButton
-    return ToggleButton
-end
-
-local function placeInStarterGUI()
-    local ContainerGUI = Instance.new("ScreenGui")
-    ContainerGUI.Name = "EliteControlContainer"
-    ContainerGUI.ResetOnSpawn = false
-    ContainerGUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    ContainerGUI.IgnoreGuiInset = true
-    
-    local toggleButton = createToggleButton()
-    toggleButton.Parent = ContainerGUI
-    
-    ContainerGUI.Parent = player.PlayerGui
-    
-    return ContainerGUI
-end
-
-local function initializeGUI()
-    if EliteControlGui.Initialized then 
-        local playerGui = player:FindFirstChild("PlayerGui")
-        if playerGui then
-            if not playerGui:FindFirstChild("EliteControlContainer") then
-                placeInStarterGUI()
-            end
-            if EliteControlGui.ScreenGui and EliteControlGui.ScreenGui.Parent == nil then
-                EliteControlGui.ScreenGui.Parent = playerGui
-            end
-        end
-        return 
-    end
-    
-    local playerGui = player:WaitForChild("PlayerGui")
-    
-    cleanupOldGUI()
-    
-    placeInStarterGUI()
-    
-    createMainGUI()
-    EliteControlGui.ScreenGui.Parent = playerGui
-    
-    EliteControlGui.Initialized = true
-    
-    print("Elite Control GUI initialized successfully!")
-end
-
-local function onCharacterAdded(character)
-    wait(2)
-    initializeGUI()
-end
-
-player.CharacterAdded:Connect(onCharacterAdded)
-
-initializeGUI()
-
-wait(3)
-initializeGUI()
+print("GUI NPC Controller đã được tạo!")
