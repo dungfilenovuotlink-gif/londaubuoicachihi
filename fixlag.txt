@@ -34,7 +34,7 @@ Title.Size = UDim2.new(1, 0, 0, 25)
 Title.Position = UDim2.new(0, 0, 0, 0)
 Title.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 Title.TextColor3 = Color3.fromRGB(220, 220, 220)
-Title.Text = "NPC Assist v2"
+Title.Text = "NPC Assist - STEALTH"
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 12
 Title.Parent = MainFrame
@@ -49,7 +49,7 @@ FlyToggle.Size = UDim2.new(0.9, 0, 0, 25)
 FlyToggle.Position = UDim2.new(0.05, 0, 0.18, 0)
 FlyToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
 FlyToggle.TextColor3 = Color3.fromRGB(220, 220, 220)
-FlyToggle.Text = "FLY: OFF"
+FlyToggle.Text = "STEALTH FLY: OFF"
 FlyToggle.Font = Enum.Font.Gotham
 FlyToggle.TextSize = 11
 FlyToggle.Parent = MainFrame
@@ -58,34 +58,34 @@ local FlyCorner = Instance.new("UICorner")
 FlyCorner.CornerRadius = UDim.new(0, 6)
 FlyCorner.Parent = FlyToggle
 
--- Textbox độ cao
-local HeightBox = Instance.new("TextBox")
-HeightBox.Size = UDim2.new(0.4, 0, 0, 25)
-HeightBox.Position = UDim2.new(0.05, 0, 0.35, 0)
-HeightBox.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
-HeightBox.TextColor3 = Color3.fromRGB(220, 220, 220)
-HeightBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
-HeightBox.PlaceholderText = "Độ cao"
-HeightBox.Text = "10"
-HeightBox.Font = Enum.Font.Gotham
-HeightBox.TextSize = 11
-HeightBox.Parent = MainFrame
+-- Textbox khoảng cách
+local DistanceBox = Instance.new("TextBox")
+DistanceBox.Size = UDim2.new(0.4, 0, 0, 25)
+DistanceBox.Position = UDim2.new(0.05, 0, 0.35, 0)
+DistanceBox.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+DistanceBox.TextColor3 = Color3.fromRGB(220, 220, 220)
+DistanceBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+DistanceBox.PlaceholderText = "Khoảng cách"
+DistanceBox.Text = "8"
+DistanceBox.Font = Enum.Font.Gotham
+DistanceBox.TextSize = 11
+DistanceBox.Parent = MainFrame
 
-local HeightCorner = Instance.new("UICorner")
-HeightCorner.CornerRadius = UDim.new(0, 6)
-HeightCorner.Parent = HeightBox
+local DistanceCorner = Instance.new("UICorner")
+DistanceCorner.CornerRadius = UDim.new(0, 6)
+DistanceCorner.Parent = DistanceBox
 
--- Label độ cao
-local HeightLabel = Instance.new("TextLabel")
-HeightLabel.Size = UDim2.new(0.5, 0, 0, 25)
-HeightLabel.Position = UDim2.new(0.5, 0, 0.35, 0)
-HeightLabel.BackgroundTransparency = 1
-HeightLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-HeightLabel.Text = "Studs"
-HeightLabel.Font = Enum.Font.Gotham
-HeightLabel.TextSize = 10
-HeightLabel.TextXAlignment = Enum.TextXAlignment.Left
-HeightLabel.Parent = MainFrame
+-- Label khoảng cách
+local DistanceLabel = Instance.new("TextLabel")
+DistanceLabel.Size = UDim2.new(0.5, 0, 0, 25)
+DistanceLabel.Position = UDim2.new(0.5, 0, 0.35, 0)
+DistanceLabel.BackgroundTransparency = 1
+DistanceLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+DistanceLabel.Text = "Studs"
+DistanceLabel.Font = Enum.Font.Gotham
+DistanceLabel.TextSize = 10
+DistanceLabel.TextXAlignment = Enum.TextXAlignment.Left
+DistanceLabel.Parent = MainFrame
 
 -- Toggle Auto Tool
 local ToolToggle = Instance.new("TextButton")
@@ -102,20 +102,20 @@ local ToolCorner = Instance.new("UICorner")
 ToolCorner.CornerRadius = UDim.new(0, 6)
 ToolCorner.Parent = ToolToggle
 
--- Toggle Áp chế NPC
-local CrushToggle = Instance.new("TextButton")
-CrushToggle.Size = UDim2.new(0.9, 0, 0, 25)
-CrushToggle.Position = UDim2.new(0.05, 0, 0.69, 0)
-CrushToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-CrushToggle.TextColor3 = Color3.fromRGB(220, 220, 220)
-CrushToggle.Text = "ÁP CHẾ NPC: OFF"
-CrushToggle.Font = Enum.Font.Gotham
-CrushToggle.TextSize = 11
-CrushToggle.Parent = MainFrame
+-- Toggle Orbit Mode
+local OrbitToggle = Instance.new("TextButton")
+OrbitToggle.Size = UDim2.new(0.9, 0, 0, 25)
+OrbitToggle.Position = UDim2.new(0.05, 0, 0.69, 0)
+OrbitToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+OrbitToggle.TextColor3 = Color3.fromRGB(220, 220, 220)
+OrbitToggle.Text = "ORBIT MODE: OFF"
+OrbitToggle.Font = Enum.Font.Gotham
+OrbitToggle.TextSize = 11
+OrbitToggle.Parent = MainFrame
 
-local CrushCorner = Instance.new("UICorner")
-CrushCorner.CornerRadius = UDim.new(0, 6)
-CrushCorner.Parent = CrushToggle
+local OrbitCorner = Instance.new("UICorner")
+OrbitCorner.CornerRadius = UDim.new(0, 6)
+OrbitCorner.Parent = OrbitToggle
 
 -- Status Label
 local StatusLabel = Instance.new("TextLabel")
@@ -132,11 +132,12 @@ StatusLabel.Parent = MainFrame
 -- Biến điều khiển
 local isFlying = false
 local isAutoTool = false
-local isCrushing = false
-local currentHeight = 10
+local isOrbiting = false
+local currentDistance = 8
 local flyConnection = nil
 local toolConnection = nil
-local crushConnection = nil
+local orbitConnection = nil
+local lastPosition = nil
 
 -- Hiệu ứng hover cho buttons
 local function setupButtonHover(button)
@@ -145,7 +146,7 @@ local function setupButtonHover(button)
             TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 65)}):Play()
         elseif button == ToolToggle and not isAutoTool then
             TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 65)}):Play()
-        elseif button == CrushToggle and not isCrushing then
+        elseif button == OrbitToggle and not isOrbiting then
             TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 65)}):Play()
         end
     end)
@@ -155,7 +156,7 @@ local function setupButtonHover(button)
             TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 55)}):Play()
         elseif button == ToolToggle and not isAutoTool then
             TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 55)}):Play()
-        elseif button == CrushToggle and not isCrushing then
+        elseif button == OrbitToggle and not isOrbiting then
             TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 55)}):Play()
         end
     end)
@@ -163,7 +164,7 @@ end
 
 setupButtonHover(FlyToggle)
 setupButtonHover(ToolToggle)
-setupButtonHover(CrushToggle)
+setupButtonHover(OrbitToggle)
 
 -- Hàm tìm boss
 function findNearestNPC()
@@ -215,8 +216,48 @@ function getTool()
     return nil
 end
 
--- Hàm bay lên đầu NPC
-function flyAboveNPC()
+-- Hàm di chuyển stealth (tránh anti-cheat)
+function stealthMoveToPosition(targetPosition)
+    if not humanoidRootPart then return false end
+    
+    -- Tính vector di chuyển
+    local direction = (targetPosition - humanoidRootPart.Position)
+    local distance = direction.Magnitude
+    
+    -- Nếu quá gần thì không di chuyển
+    if distance < 2 then
+        return true
+    end
+    
+    -- Giới hạn tốc độ di chuyển để trông tự nhiên
+    local maxSpeed = 25
+    if distance > 10 then
+        direction = direction.Unit * math.min(distance, maxSpeed)
+    else
+        direction = direction.Unit * (distance * 0.5) -- Di chuyển chậm khi gần
+    end
+    
+    -- Sử dụng Humanoid thay vì trực tiếp set CFrame
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        -- Giả lập movement bằng cách set velocity một cách tự nhiên
+        humanoidRootPart.Velocity = direction
+        
+        -- Xoay character về phía NPC
+        local npc = findNearestNPC()
+        if npc then
+            local npcRoot = npc:FindFirstChild("HumanoidRootPart") or npc:FindFirstChild("Head") or npc:FindFirstChild("Torso")
+            if npcRoot then
+                humanoidRootPart.CFrame = CFrame.new(humanoidRootPart.Position, Vector3.new(npcRoot.Position.X, humanoidRootPart.Position.Y, npcRoot.Position.Z))
+            end
+        end
+    end
+    
+    return true
+end
+
+-- Hàm bay stealth (orbit quanh NPC thay vì lên đầu)
+function stealthOrbitNPC()
     local npc = findNearestNPC()
     if not npc then 
         StatusLabel.Text = "Không tìm thấy NPC"
@@ -234,19 +275,32 @@ function flyAboveNPC()
         return false 
     end
 
-    -- Cập nhật độ cao từ textbox
-    local newHeight = tonumber(HeightBox.Text)
-    if newHeight and newHeight > 0 then
-        currentHeight = newHeight
+    -- Cập nhật khoảng cách từ textbox
+    local newDistance = tonumber(DistanceBox.Text)
+    if newDistance and newDistance > 0 then
+        currentDistance = newDistance
     else
-        HeightBox.Text = tostring(currentHeight)
+        DistanceBox.Text = tostring(currentDistance)
     end
     
-    local targetPosition = npcRoot.Position + Vector3.new(0, currentHeight, 0)
+    if isOrbiting then
+        -- Chế độ orbit: bay vòng quanh NPC
+        local angle = tick() * 2 -- Tốc độ orbit
+        local offset = Vector3.new(math.cos(angle) * currentDistance, 3, math.sin(angle) * currentDistance) -- Cao hơn NPC 3 studs
+        local targetPosition = npcRoot.Position + offset
+        
+        stealthMoveToPosition(targetPosition)
+        StatusLabel.Text = "Đang orbit..."
+    else
+        -- Chế độ thường: đứng ở khoảng cách an toàn
+        local direction = (humanoidRootPart.Position - npcRoot.Position).Unit
+        local targetPosition = npcRoot.Position + (direction * currentDistance)
+        targetPosition = Vector3.new(targetPosition.X, npcRoot.Position.Y + 2, targetPosition.Z) -- Cao hơn một chút
+        
+        stealthMoveToPosition(targetPosition)
+        StatusLabel.Text = "Đang giữ khoảng cách..."
+    end
     
-    -- Di chuyển và aim xuống NPC
-    humanoidRootPart.CFrame = CFrame.new(targetPosition, npcRoot.Position)
-    StatusLabel.Text = "Đang bay..."
     return true
 end
 
@@ -254,115 +308,44 @@ end
 function useToolAutomatically()
     local tool = getTool()
     if tool then
-        tool:Activate()
-    end
-end
-
--- Hàm áp chế NPC (làm NPC lún xuống)
-function crushNPC()
-    local npc = findNearestNPC()
-    if not npc then 
-        StatusLabel.Text = "Không tìm thấy NPC để áp chế"
-        return false 
-    end
-    
-    local npcRoot = npc:FindFirstChild("HumanoidRootPart") or npc:FindFirstChild("Head") or npc:FindFirstChild("Torso")
-    if not npcRoot then 
-        StatusLabel.Text = "NPC không có root part"
-        return false 
-    end
-    
-    -- Tạo lực đẩy NPC xuống đất
-    local bodyVelocity = npcRoot:FindFirstChild("CrushVelocity")
-    if not bodyVelocity then
-        bodyVelocity = Instance.new("BodyVelocity")
-        bodyVelocity.Name = "CrushVelocity"
-        bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
-        bodyVelocity.Velocity = Vector3.new(0, -50, 0) -- Lực đẩy xuống mạnh
-        bodyVelocity.Parent = npcRoot
-    else
-        bodyVelocity.Velocity = Vector3.new(0, -50, 0)
-    end
-    
-    -- Thêm BodyForce để tăng hiệu ứng lún
-    local bodyForce = npcRoot:FindFirstChild("CrushForce")
-    if not bodyForce then
-        bodyForce = Instance.new("BodyForce")
-        bodyForce.Name = "CrushForce"
-        bodyForce.Force = Vector3.new(0, -1000, 0) -- Lực hướng xuống
-        bodyForce.Parent = npcRoot
-    end
-    
-    StatusLabel.Text = "Đang áp chế NPC..."
-    return true
-end
-
--- Hàm dừng áp chế NPC
-function stopCrushingNPC()
-    local npc = findNearestNPC()
-    if npc then
-        local npcRoot = npc:FindFirstChild("HumanoidRootPart") or npc:FindFirstChild("Head") or npc:FindFirstChild("Torso")
-        if npcRoot then
-            local bodyVelocity = npcRoot:FindFirstChild("CrushVelocity")
-            local bodyForce = npcRoot:FindFirstChild("CrushForce")
-            
-            if bodyVelocity then
-                bodyVelocity:Destroy()
-            end
-            if bodyForce then
-                bodyForce:Destroy()
-            end
+        -- Sử dụng tool với delay ngẫu nhiên để tránh bị phát hiện
+        if math.random(1, 3) == 1 then -- Chỉ kích hoạt 1/3 thời gian
+            tool:Activate()
         end
     end
 end
 
--- Hàm bắt đầu bay
-function startFlying()
+-- Hàm bắt đầu bay stealth
+function startStealthFlying()
     if flyConnection then
         flyConnection:Disconnect()
         flyConnection = nil
     end
     
     flyConnection = RunService.Heartbeat:Connect(function()
-        local success = flyAboveNPC()
-        if not success then
-            StatusLabel.Text = "Lỗi khi bay"
+        -- Thêm delay ngẫu nhiên để movement trông tự nhiên hơn
+        if math.random(1, 2) == 1 then
+            local success = stealthOrbitNPC()
+            if not success then
+                StatusLabel.Text = "Lỗi khi bay"
+            end
         end
     end)
 end
 
 -- Hàm dừng bay
-function stopFlying()
+function stopStealthFlying()
     if flyConnection then
         flyConnection:Disconnect()
         flyConnection = nil
     end
-    StatusLabel.Text = "Đã dừng bay"
-end
-
--- Hàm bắt đầu áp chế
-function startCrushing()
-    if crushConnection then
-        crushConnection:Disconnect()
-        crushConnection = nil
+    
+    -- Reset velocity khi dừng
+    if humanoidRootPart then
+        humanoidRootPart.Velocity = Vector3.new(0, 0, 0)
     end
     
-    crushConnection = RunService.Heartbeat:Connect(function()
-        local success = crushNPC()
-        if not success then
-            StatusLabel.Text = "Lỗi khi áp chế"
-        end
-    end)
-end
-
--- Hàm dừng áp chế
-function stopCrushing()
-    if crushConnection then
-        crushConnection:Disconnect()
-        crushConnection = nil
-    end
-    stopCrushingNPC()
-    StatusLabel.Text = "Đã dừng áp chế"
+    StatusLabel.Text = "Đã dừng bay"
 end
 
 -- Sự kiện Fly Toggle
@@ -370,24 +353,24 @@ FlyToggle.MouseButton1Click:Connect(function()
     isFlying = not isFlying
     
     if isFlying then
-        -- Bật fly
+        -- Bật fly stealth
         local success = pcall(function()
             FlyToggle.BackgroundColor3 = Color3.fromRGB(0, 120, 60)
-            FlyToggle.Text = "FLY: ON"
-            startFlying()
+            FlyToggle.Text = "STEALTH FLY: ON"
+            startStealthFlying()
         end)
         
         if not success then
             isFlying = false
             FlyToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-            FlyToggle.Text = "FLY: OFF"
+            FlyToggle.Text = "STEALTH FLY: OFF"
             StatusLabel.Text = "Lỗi khi bật fly"
         end
     else
         -- Tắt fly
         FlyToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-        FlyToggle.Text = "FLY: OFF"
-        stopFlying()
+        FlyToggle.Text = "STEALTH FLY: OFF"
+        stopStealthFlying()
     end
 end)
 
@@ -402,7 +385,10 @@ ToolToggle.MouseButton1Click:Connect(function()
         
         if isFlying and not toolConnection then
             toolConnection = RunService.Heartbeat:Connect(function()
-                useToolAutomatically()
+                -- Sử dụng tool với xác suất thấp hơn để stealth
+                if math.random(1, 4) == 1 then
+                    useToolAutomatically()
+                end
             end)
         end
     else
@@ -417,40 +403,33 @@ ToolToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- Sự kiện Áp chế Toggle
-CrushToggle.MouseButton1Click:Connect(function()
-    isCrushing = not isCrushing
+-- Sự kiện Orbit Toggle
+OrbitToggle.MouseButton1Click:Connect(function()
+    isOrbiting = not isOrbiting
     
-    if isCrushing then
-        -- Bật áp chế
-        local success = pcall(function()
-            CrushToggle.BackgroundColor3 = Color3.fromRGB(180, 60, 0)
-            CrushToggle.Text = "ÁP CHẾ NPC: ON"
-            startCrushing()
-        end)
-        
-        if not success then
-            isCrushing = false
-            CrushToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-            CrushToggle.Text = "ÁP CHẾ NPC: OFF"
-            StatusLabel.Text = "Lỗi khi bật áp chế"
-        end
+    if isOrbiting then
+        -- Bật orbit mode
+        OrbitToggle.BackgroundColor3 = Color3.fromRGB(120, 0, 180)
+        OrbitToggle.Text = "ORBIT MODE: ON"
+        StatusLabel.Text = "Đã bật chế độ orbit"
     else
-        -- Tắt áp chế
-        CrushToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-        CrushToggle.Text = "ÁP CHẾ NPC: OFF"
-        stopCrushing()
+        -- Tắt orbit mode
+        OrbitToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+        OrbitToggle.Text = "ORBIT MODE: OFF"
+        StatusLabel.Text = "Đã tắt chế độ orbit"
     end
 end)
 
--- Xử lý textbox độ cao
-HeightBox.FocusLost:Connect(function(enterPressed)
-    local newHeight = tonumber(HeightBox.Text)
-    if newHeight and newHeight > 0 and newHeight <= 100 then
-        currentHeight = newHeight
-        HeightBox.Text = tostring(currentHeight)
+-- Xử lý textbox khoảng cách
+DistanceBox.FocusLost:Connect(function(enterPressed)
+    local newDistance = tonumber(DistanceBox.Text)
+    if newDistance and newDistance >= 5 and newDistance <= 20 then
+        currentDistance = newDistance
+        DistanceBox.Text = tostring(currentDistance)
+        StatusLabel.Text = "Khoảng cách: " .. currentDistance .. " studs"
     else
-        HeightBox.Text = tostring(currentHeight)
+        DistanceBox.Text = tostring(currentDistance)
+        StatusLabel.Text = "Khoảng cách phải từ 5-20"
     end
 end)
 
@@ -463,8 +442,8 @@ player.CharacterAdded:Connect(function(newCharacter)
     if isFlying then
         isFlying = false
         FlyToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-        FlyToggle.Text = "FLY: OFF"
-        stopFlying()
+        FlyToggle.Text = "STEALTH FLY: OFF"
+        stopStealthFlying()
     end
     
     if isAutoTool then
@@ -477,11 +456,10 @@ player.CharacterAdded:Connect(function(newCharacter)
         end
     end
     
-    if isCrushing then
-        isCrushing = false
-        CrushToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-        CrushToggle.Text = "ÁP CHẾ NPC: OFF"
-        stopCrushing()
+    if isOrbiting then
+        isOrbiting = false
+        OrbitToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+        OrbitToggle.Text = "ORBIT MODE: OFF"
     end
 end)
 
@@ -521,8 +499,8 @@ game:GetService("UserInputService").InputChanged:Connect(function(input)
 end)
 
 -- Debug info
-print("NPC Assist GUI đã được tạo!")
-print("Script đang chạy...")
+print("NPC Assist STEALTH đã được tạo!")
+print("Bypass anti-cheat activated")
 print("Đường dẫn NPC: workspace.GiangHo2.NPCs")
 
 -- Test tìm NPC
@@ -531,7 +509,7 @@ spawn(function()
     local npc = findNearestNPC()
     if npc then
         print("Tìm thấy NPC:", npc.Name)
-        StatusLabel.Text = "Sẵn sàng - Đã tìm thấy NPC"
+        StatusLabel.Text = "STEALTH READY - Đã tìm thấy NPC"
     else
         print("Không tìm thấy NPC")
         StatusLabel.Text = "Không tìm thấy NPC"
