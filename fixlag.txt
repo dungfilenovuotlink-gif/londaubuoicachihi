@@ -13,7 +13,7 @@ ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = player.PlayerGui
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 180, 0, 140)
+MainFrame.Size = UDim2.new(0, 200, 0, 160)
 MainFrame.Position = UDim2.new(0, 10, 0, 10)
 MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 MainFrame.BorderSizePixel = 0
@@ -46,7 +46,7 @@ TitleCorner.Parent = Title
 -- Toggle Fly
 local FlyToggle = Instance.new("TextButton")
 FlyToggle.Size = UDim2.new(0.9, 0, 0, 25)
-FlyToggle.Position = UDim2.new(0.05, 0, 0.22, 0)
+FlyToggle.Position = UDim2.new(0.05, 0, 0.2, 0)
 FlyToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
 FlyToggle.TextColor3 = Color3.fromRGB(220, 220, 220)
 FlyToggle.Text = "FLY: OFF"
@@ -61,11 +61,11 @@ FlyCorner.Parent = FlyToggle
 -- Textbox độ cao
 local HeightBox = Instance.new("TextBox")
 HeightBox.Size = UDim2.new(0.4, 0, 0, 25)
-HeightBox.Position = UDim2.new(0.05, 0, 0.45, 0)
+HeightBox.Position = UDim2.new(0.05, 0, 0.4, 0)
 HeightBox.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
 HeightBox.TextColor3 = Color3.fromRGB(220, 220, 220)
 HeightBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
-HeightBox.PlaceholderText = "Height"
+HeightBox.PlaceholderText = "Độ cao"
 HeightBox.Text = "10"
 HeightBox.Font = Enum.Font.Gotham
 HeightBox.TextSize = 11
@@ -78,238 +78,5 @@ HeightCorner.Parent = HeightBox
 -- Label độ cao
 local HeightLabel = Instance.new("TextLabel")
 HeightLabel.Size = UDim2.new(0.5, 0, 0, 25)
-HeightLabel.Position = UDim2.new(0.5, 0, 0.45, 0)
+HeightLabel.Position = UDim2.new(0.5, 0, 0.4, 0)
 HeightLabel.BackgroundTransparency = 1
-HeightLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-HeightLabel.Text = "Studs"
-HeightLabel.Font = Enum.Font.Gotham
-HeightLabel.TextSize = 10
-HeightLabel.TextXAlignment = Enum.TextXAlignment.Left
-HeightLabel.Parent = MainFrame
-
--- Toggle Auto Tool
-local ToolToggle = Instance.new("TextButton")
-ToolToggle.Size = UDim2.new(0.9, 0, 0, 25)
-ToolToggle.Position = UDim2.new(0.05, 0, 0.68, 0)
-ToolToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-ToolToggle.TextColor3 = Color3.fromRGB(220, 220, 220)
-ToolToggle.Text = "AUTO TOOL: OFF"
-ToolToggle.Font = Enum.Font.Gotham
-ToolToggle.TextSize = 11
-ToolToggle.Parent = MainFrame
-
-local ToolCorner = Instance.new("UICorner")
-ToolCorner.CornerRadius = UDim.new(0, 6)
-ToolCorner.Parent = ToolToggle
-
--- Biến điều khiển
-local isFlying = false
-local isAutoTool = false
-local currentHeight = 10
-local flyConnection = nil
-local toolConnection = nil
-
--- Hiệu ứng hover cho buttons
-local function setupButtonHover(button)
-    button.MouseEnter:Connect(function()
-        if button == FlyToggle and not isFlying then
-            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 65)}):Play()
-        elseif button == ToolToggle and not isAutoTool then
-            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 65)}):Play()
-        end
-    end)
-    
-    button.MouseLeave:Connect(function()
-        if button == FlyToggle and not isFlying then
-            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 55)}):Play()
-        elseif button == ToolToggle and not isAutoTool then
-            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 55)}):Play()
-        end
-    end)
-end
-
-setupButtonHover(FlyToggle)
-setupButtonHover(ToolToggle)
-
--- Hàm tìm NPC gần nhất
-function findNearestNPC()
-    local npcsFolder = workspace:FindFirstChild("Giangho2")
-    if not npcsFolder then 
-        return nil 
-    end
-    
-    npcsFolder = npcsFolder:FindFirstChild("NPCs")
-    if not npcsFolder then 
-        return nil 
-    end
-    
-    local nearestNPC = nil
-    local nearestDistance = math.huge
-    
-    for _, npc in pairs(npcsFolder:GetChildren()) do
-        if npc:IsA("Model") then
-            local npcRoot = npc:FindFirstChild("HumanoidRootPart") or npc:FindFirstChild("Head") or npc:FindFirstChild("Torso")
-            if npcRoot and humanoidRootPart then
-                local distance = (npcRoot.Position - humanoidRootPart.Position).Magnitude
-                if distance < nearestDistance then
-                    nearestDistance = distance
-                    nearestNPC = npc
-                end
-            end
-        end
-    end
-    
-    return nearestNPC
-end
-
--- Hàm bay đến NPC
-function flyToNPC()
-    local npc = findNearestNPC()
-    if not npc then return end
-    
-    local npcRoot = npc:FindFirstChild("HumanoidRootPart") or npc:FindFirstChild("Head") or npc:FindFirstChild("Torso")
-    if not npcRoot or not humanoidRootPart then return end
-    
-    -- Cập nhật độ cao từ textbox
-    local newHeight = tonumber(HeightBox.Text)
-    if newHeight and newHeight > 0 then
-        currentHeight = newHeight
-    else
-        HeightBox.Text = tostring(currentHeight)
-    end
-    
-    local targetPosition = npcRoot.Position + Vector3.new(0, currentHeight, 0)
-    
-    -- Di chuyển và aim xuống NPC
-    humanoidRootPart.CFrame = CFrame.new(targetPosition, npcRoot.Position)
-end
-
--- Hàm sử dụng tool tự động
-function useToolAutomatically()
-    local tool = character:FindFirstChildOfClass("Tool")
-    if tool then
-        -- Kích hoạt tool
-        local remote = tool:FindFirstChildOfClass("RemoteEvent") or tool:FindFirstChildOfClass("RemoteFunction")
-        if remote then
-            remote:FireServer("activate")
-        else
-            tool:Activate()
-        end
-    end
-end
-
--- Sự kiện Fly Toggle
-FlyToggle.MouseButton1Click:Connect(function()
-    isFlying = not isFlying
-    
-    if isFlying then
-        -- Bật fly
-        FlyToggle.BackgroundColor3 = Color3.fromRGB(0, 120, 60)
-        FlyToggle.Text = "FLY: ON"
-        
-        flyConnection = RunService.Heartbeat:Connect(function()
-            flyToNPC()
-        end)
-    else
-        -- Tắt fly
-        FlyToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-        FlyToggle.Text = "FLY: OFF"
-        
-        if flyConnection then
-            flyConnection:Disconnect()
-            flyConnection = nil
-        end
-    end
-end)
-
--- Sự kiện Auto Tool Toggle
-ToolToggle.MouseButton1Click:Connect(function()
-    isAutoTool = not isAutoTool
-    
-    if isAutoTool then
-        -- Bật auto tool
-        ToolToggle.BackgroundColor3 = Color3.fromRGB(0, 100, 180)
-        ToolToggle.Text = "AUTO TOOL: ON"
-        
-        toolConnection = RunService.Heartbeat:Connect(function()
-            if isFlying then
-                useToolAutomatically()
-            end
-        end)
-    else
-        -- Tắt auto tool
-        ToolToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-        ToolToggle.Text = "AUTO TOOL: OFF"
-        
-        if toolConnection then
-            toolConnection:Disconnect()
-            toolConnection = nil
-        end
-    end
-end)
-
--- Xử lý textbox độ cao
-HeightBox.FocusLost:Connect(function(enterPressed)
-    local newHeight = tonumber(HeightBox.Text)
-    if newHeight and newHeight > 0 and newHeight <= 100 then
-        currentHeight = newHeight
-        HeightBox.Text = tostring(currentHeight)
-    else
-        HeightBox.Text = tostring(currentHeight)
-    end
-end)
-
--- Xử lý khi character respawn
-player.CharacterAdded:Connect(function(newCharacter)
-    character = newCharacter
-    humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-    
-    -- Reset trạng thái khi respawn
-    if isFlying then
-        isFlying = false
-        FlyToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-        FlyToggle.Text = "FLY: OFF"
-        if flyConnection then
-            flyConnection:Disconnect()
-            flyConnection = nil
-        end
-    end
-end)
-
--- Kéo GUI
-local dragging = false
-local dragInput, dragStart, startPos
-
-local function update(input)
-    local delta = input.Position - dragStart
-    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-end
-
-Title.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = MainFrame.Position
-        
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
-end)
-
-Title.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
-    end
-end)
-
-game:GetService("UserInputService").InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        update(input)
-    end
-end)
-
-print("NPC Assist GUI đã được tạo!")
-print("Đường dẫn NPC: workspace.Giangho2.NPCs")
