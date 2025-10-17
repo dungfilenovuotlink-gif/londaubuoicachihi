@@ -13,7 +13,7 @@ ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = player.PlayerGui
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 200, 0, 150)
+MainFrame.Size = UDim2.new(0, 180, 0, 140)
 MainFrame.Position = UDim2.new(0, 10, 0, 10)
 MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 MainFrame.BorderSizePixel = 0
@@ -30,13 +30,13 @@ UIStroke.Parent = MainFrame
 
 -- Tiêu đề
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Size = UDim2.new(1, 0, 0, 25)
 Title.Position = UDim2.new(0, 0, 0, 0)
 Title.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 Title.TextColor3 = Color3.fromRGB(220, 220, 220)
-Title.Text = "NPC Assist v2"
+Title.Text = "NPC Assist"
 Title.Font = Enum.Font.GothamBold
-Title.TextSize = 14
+Title.TextSize = 12
 Title.Parent = MainFrame
 
 local TitleCorner = Instance.new("UICorner")
@@ -46,12 +46,12 @@ TitleCorner.Parent = Title
 -- Toggle Fly
 local FlyToggle = Instance.new("TextButton")
 FlyToggle.Size = UDim2.new(0.9, 0, 0, 25)
-FlyToggle.Position = UDim2.new(0.05, 0, 0.25, 0)
+FlyToggle.Position = UDim2.new(0.05, 0, 0.22, 0)
 FlyToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
 FlyToggle.TextColor3 = Color3.fromRGB(220, 220, 220)
 FlyToggle.Text = "FLY: OFF"
 FlyToggle.Font = Enum.Font.Gotham
-FlyToggle.TextSize = 12
+FlyToggle.TextSize = 11
 FlyToggle.Parent = MainFrame
 
 local FlyCorner = Instance.new("UICorner")
@@ -61,14 +61,14 @@ FlyCorner.Parent = FlyToggle
 -- Textbox độ cao
 local HeightBox = Instance.new("TextBox")
 HeightBox.Size = UDim2.new(0.4, 0, 0, 25)
-HeightBox.Position = UDim2.new(0.05, 0, 0.5, 0)
+HeightBox.Position = UDim2.new(0.05, 0, 0.45, 0)
 HeightBox.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
 HeightBox.TextColor3 = Color3.fromRGB(220, 220, 220)
 HeightBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
 HeightBox.PlaceholderText = "Height"
 HeightBox.Text = "10"
 HeightBox.Font = Enum.Font.Gotham
-HeightBox.TextSize = 12
+HeightBox.TextSize = 11
 HeightBox.Parent = MainFrame
 
 local HeightCorner = Instance.new("UICorner")
@@ -78,24 +78,24 @@ HeightCorner.Parent = HeightBox
 -- Label độ cao
 local HeightLabel = Instance.new("TextLabel")
 HeightLabel.Size = UDim2.new(0.5, 0, 0, 25)
-HeightLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+HeightLabel.Position = UDim2.new(0.5, 0, 0.45, 0)
 HeightLabel.BackgroundTransparency = 1
 HeightLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
 HeightLabel.Text = "Studs"
 HeightLabel.Font = Enum.Font.Gotham
-HeightLabel.TextSize = 11
+HeightLabel.TextSize = 10
 HeightLabel.TextXAlignment = Enum.TextXAlignment.Left
 HeightLabel.Parent = MainFrame
 
 -- Toggle Auto Tool
 local ToolToggle = Instance.new("TextButton")
 ToolToggle.Size = UDim2.new(0.9, 0, 0, 25)
-ToolToggle.Position = UDim2.new(0.05, 0, 0.75, 0)
+ToolToggle.Position = UDim2.new(0.05, 0, 0.68, 0)
 ToolToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
 ToolToggle.TextColor3 = Color3.fromRGB(220, 220, 220)
 ToolToggle.Text = "AUTO TOOL: OFF"
 ToolToggle.Font = Enum.Font.Gotham
-ToolToggle.TextSize = 12
+ToolToggle.TextSize = 11
 ToolToggle.Parent = MainFrame
 
 local ToolCorner = Instance.new("UICorner")
@@ -133,15 +133,13 @@ setupButtonHover(ToolToggle)
 
 -- Hàm tìm NPC gần nhất
 function findNearestNPC()
-    local npcsFolder = workspace:FindFirstChild("giangho2")
+    local npcsFolder = workspace:FindFirstChild("Giangho2")
     if not npcsFolder then 
-        warn("Không tìm thấy folder giangho2")
         return nil 
     end
     
-    npcsFolder = npcsFolder:FindFirstChild("npcs")
+    npcsFolder = npcsFolder:FindFirstChild("NPCs")
     if not npcsFolder then 
-        warn("Không tìm thấy folder npcs")
         return nil 
     end
     
@@ -149,12 +147,14 @@ function findNearestNPC()
     local nearestDistance = math.huge
     
     for _, npc in pairs(npcsFolder:GetChildren()) do
-        local npcRoot = npc:FindFirstChild("HumanoidRootPart") or npc:FindFirstChild("Head") or npc:FindFirstChild("Torso")
-        if npcRoot and humanoidRootPart then
-            local distance = (npcRoot.Position - humanoidRootPart.Position).Magnitude
-            if distance < nearestDistance then
-                nearestDistance = distance
-                nearestNPC = npc
+        if npc:IsA("Model") then
+            local npcRoot = npc:FindFirstChild("HumanoidRootPart") or npc:FindFirstChild("Head") or npc:FindFirstChild("Torso")
+            if npcRoot and humanoidRootPart then
+                local distance = (npcRoot.Position - humanoidRootPart.Position).Magnitude
+                if distance < nearestDistance then
+                    nearestDistance = distance
+                    nearestNPC = npc
+                end
             end
         end
     end
@@ -188,12 +188,11 @@ end
 function useToolAutomatically()
     local tool = character:FindFirstChildOfClass("Tool")
     if tool then
-        -- Kích hoạt tool (tùy chỉnh theo game)
+        -- Kích hoạt tool
         local remote = tool:FindFirstChildOfClass("RemoteEvent") or tool:FindFirstChildOfClass("RemoteFunction")
         if remote then
             remote:FireServer("activate")
         else
-            -- Fallback: click tool
             tool:Activate()
         end
     end
@@ -313,3 +312,4 @@ game:GetService("UserInputService").InputChanged:Connect(function(input)
 end)
 
 print("NPC Assist GUI đã được tạo!")
+print("Đường dẫn NPC: workspace.Giangho2.NPCs")
