@@ -13,7 +13,7 @@ ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = player.PlayerGui
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 220, 0, 200)
+MainFrame.Size = UDim2.new(0, 220, 0, 230)
 MainFrame.Position = UDim2.new(0, 10, 0, 10)
 MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 MainFrame.BorderSizePixel = 0
@@ -46,7 +46,7 @@ TitleCorner.Parent = Title
 -- Toggle Fly
 local FlyToggle = Instance.new("TextButton")
 FlyToggle.Size = UDim2.new(0.9, 0, 0, 25)
-FlyToggle.Position = UDim2.new(0.05, 0, 0.18, 0)
+FlyToggle.Position = UDim2.new(0.05, 0, 0.15, 0)
 FlyToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
 FlyToggle.TextColor3 = Color3.fromRGB(220, 220, 220)
 FlyToggle.Text = "STEALTH FLY: OFF"
@@ -61,7 +61,7 @@ FlyCorner.Parent = FlyToggle
 -- Textbox khoảng cách
 local DistanceBox = Instance.new("TextBox")
 DistanceBox.Size = UDim2.new(0.4, 0, 0, 25)
-DistanceBox.Position = UDim2.new(0.05, 0, 0.35, 0)
+DistanceBox.Position = UDim2.new(0.05, 0, 0.32, 0)
 DistanceBox.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
 DistanceBox.TextColor3 = Color3.fromRGB(220, 220, 220)
 DistanceBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
@@ -78,7 +78,7 @@ DistanceCorner.Parent = DistanceBox
 -- Label khoảng cách
 local DistanceLabel = Instance.new("TextLabel")
 DistanceLabel.Size = UDim2.new(0.5, 0, 0, 25)
-DistanceLabel.Position = UDim2.new(0.5, 0, 0.35, 0)
+DistanceLabel.Position = UDim2.new(0.5, 0, 0.32, 0)
 DistanceLabel.BackgroundTransparency = 1
 DistanceLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
 DistanceLabel.Text = "Studs"
@@ -87,10 +87,39 @@ DistanceLabel.TextSize = 10
 DistanceLabel.TextXAlignment = Enum.TextXAlignment.Left
 DistanceLabel.Parent = MainFrame
 
+-- Textbox tốc độ quay
+local SpeedBox = Instance.new("TextBox")
+SpeedBox.Size = UDim2.new(0.4, 0, 0, 25)
+SpeedBox.Position = UDim2.new(0.05, 0, 0.49, 0)
+SpeedBox.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+SpeedBox.TextColor3 = Color3.fromRGB(220, 220, 220)
+SpeedBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+SpeedBox.PlaceholderText = "Tốc độ quay"
+SpeedBox.Text = "1.5"
+SpeedBox.Font = Enum.Font.Gotham
+SpeedBox.TextSize = 11
+SpeedBox.Parent = MainFrame
+
+local SpeedCorner = Instance.new("UICorner")
+SpeedCorner.CornerRadius = UDim.new(0, 6)
+SpeedCorner.Parent = SpeedBox
+
+-- Label tốc độ quay
+local SpeedLabel = Instance.new("TextLabel")
+SpeedLabel.Size = UDim2.new(0.5, 0, 0, 25)
+SpeedLabel.Position = UDim2.new(0.5, 0, 0.49, 0)
+SpeedLabel.BackgroundTransparency = 1
+SpeedLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+SpeedLabel.Text = "Speed"
+SpeedLabel.Font = Enum.Font.Gotham
+SpeedLabel.TextSize = 10
+SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+SpeedLabel.Parent = MainFrame
+
 -- Toggle Auto Tool
 local ToolToggle = Instance.new("TextButton")
 ToolToggle.Size = UDim2.new(0.9, 0, 0, 25)
-ToolToggle.Position = UDim2.new(0.05, 0, 0.52, 0)
+ToolToggle.Position = UDim2.new(0.05, 0, 0.66, 0)
 ToolToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
 ToolToggle.TextColor3 = Color3.fromRGB(220, 220, 220)
 ToolToggle.Text = "AUTO TOOL: OFF"
@@ -105,7 +134,7 @@ ToolCorner.Parent = ToolToggle
 -- Toggle Orbit Mode
 local OrbitToggle = Instance.new("TextButton")
 OrbitToggle.Size = UDim2.new(0.9, 0, 0, 25)
-OrbitToggle.Position = UDim2.new(0.05, 0, 0.69, 0)
+OrbitToggle.Position = UDim2.new(0.05, 0, 0.83, 0)
 OrbitToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
 OrbitToggle.TextColor3 = Color3.fromRGB(220, 220, 220)
 OrbitToggle.Text = "ORBIT MODE: OFF"
@@ -117,27 +146,15 @@ local OrbitCorner = Instance.new("UICorner")
 OrbitCorner.CornerRadius = UDim.new(0, 6)
 OrbitCorner.Parent = OrbitToggle
 
--- Status Label
-local StatusLabel = Instance.new("TextLabel")
-StatusLabel.Size = UDim2.new(0.9, 0, 0, 25)
-StatusLabel.Position = UDim2.new(0.05, 0, 0.86, 0)
-StatusLabel.BackgroundTransparency = 1
-StatusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-StatusLabel.Text = "Đang chờ..."
-StatusLabel.Font = Enum.Font.Gotham
-StatusLabel.TextSize = 10
-StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
-StatusLabel.Parent = MainFrame
-
 -- Biến điều khiển
 local isFlying = false
 local isAutoTool = false
 local isOrbiting = false
 local currentDistance = 8
+local currentSpeed = 1.5
 local flyConnection = nil
 local toolConnection = nil
 local orbitConnection = nil
-local lastPosition = nil
 
 -- Hiệu ứng hover cho buttons
 local function setupButtonHover(button)
@@ -283,14 +300,22 @@ function stealthOrbitNPC()
         DistanceBox.Text = tostring(currentDistance)
     end
     
+    -- Cập nhật tốc độ từ textbox
+    local newSpeed = tonumber(SpeedBox.Text)
+    if newSpeed and newSpeed > 0 then
+        currentSpeed = newSpeed
+    else
+        SpeedBox.Text = tostring(currentSpeed)
+    end
+    
     if isOrbiting then
-        -- Chế độ orbit: bay vòng quanh NPC
-        local angle = tick() * 2 -- Tốc độ orbit
+        -- Chế độ orbit: bay vòng quanh NPC với tốc độ có thể chỉnh
+        local angle = tick() * currentSpeed -- Tốc độ orbit có thể chỉnh
         local offset = Vector3.new(math.cos(angle) * currentDistance, 3, math.sin(angle) * currentDistance) -- Cao hơn NPC 3 studs
         local targetPosition = npcRoot.Position + offset
         
         stealthMoveToPosition(targetPosition)
-        StatusLabel.Text = "Đang orbit..."
+        StatusLabel.Text = "Đang orbit... Tốc độ: " .. currentSpeed
     else
         -- Chế độ thường: đứng ở khoảng cách an toàn
         local direction = (humanoidRootPart.Position - npcRoot.Position).Unit
@@ -430,6 +455,19 @@ DistanceBox.FocusLost:Connect(function(enterPressed)
     else
         DistanceBox.Text = tostring(currentDistance)
         StatusLabel.Text = "Khoảng cách phải từ 5-20"
+    end
+end)
+
+-- Xử lý textbox tốc độ quay
+SpeedBox.FocusLost:Connect(function(enterPressed)
+    local newSpeed = tonumber(SpeedBox.Text)
+    if newSpeed and newSpeed >= 0.1 and newSpeed <= 5 then
+        currentSpeed = newSpeed
+        SpeedBox.Text = tostring(currentSpeed)
+        StatusLabel.Text = "Tốc độ quay: " .. currentSpeed
+    else
+        SpeedBox.Text = tostring(currentSpeed)
+        StatusLabel.Text = "Tốc độ phải từ 0.1-5"
     end
 end)
 
