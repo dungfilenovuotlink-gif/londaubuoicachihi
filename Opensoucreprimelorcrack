@@ -1,0 +1,274 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local lp = Players.LocalPlayer
+local chr = lp.Character or lp.CharacterAdded:Wait()
+local hum = chr:WaitForChild("Humanoid")
+local hrp = chr:WaitForChild("HumanoidRootPart")
+
+-- Biến
+local radius, speed = 30, 2.3
+local running, autoAttack, noclipEnabled, healing = false, false, false, false
+local currentTarget, targetOffset, orbitAngle = nil, Vector3.new(), 0
+local lastHealth = {}
+
+-- GUI
+local gui = Instance.new("ScreenGui", lp:WaitForChild("PlayerGui"))
+gui.Name = "Menu_TT"
+gui.Enabled = true
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 260, 0, 220) -- nhỏ gọn hơn
+frame.Position = UDim2.new(0.5, -130, 0.5, -110)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+frame.Active, frame.Draggable = true, true
+
+-- Viền 7 màu
+local uiStroke = Instance.new("UIStroke", frame)
+uiStroke.Thickness = 3
+uiStroke.LineJoinMode = Enum.LineJoinMode.Round
+task.spawn(function()
+    local hue = 0
+    while task.wait(0.05) do
+        hue = (hue + 2) % 360
+        uiStroke.Color = Color3.fromHSV(hue/360, 1, 1)
+    end
+end)
+
+-- Title "Prime Vip" trên đầu
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 35)
+title.Position = UDim2.new(0, 0, 0, -40)
+title.Text = "Prime Vip"
+title.TextColor3 = Color3.fromRGB(100,255,100)
+title.BackgroundTransparency = 1
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+
+-- Nút Đánh Boss
+local toggle = Instance.new("TextButton", frame)
+toggle.Size, toggle.Position = UDim2.new(1, -20, 0, 40), UDim2.new(0, 10, 0, 10)
+toggle.Text = "BẬT: Đánh Boss"
+toggle.TextColor3 = Color3.new(1,1,1)
+toggle.BackgroundColor3 = Color3.fromRGB(40,40,40)
+
+-- Nhãn & ô nhập khoảng cách
+local disLabel = Instance.new("TextLabel", frame)
+disLabel.Text = "Khoảng cách:"
+disLabel.Size = UDim2.new(0, 110, 0, 30)
+disLabel.Position = UDim2.new(0, 10, 0, 55)
+disLabel.TextColor3 = Color3.new(1,1,1)
+disLabel.BackgroundTransparency = 1
+
+local disInput = Instance.new("TextBox", frame)
+disInput.Size, disInput.Position = UDim2.new(0, 90, 0, 30), UDim2.new(0, 120, 0, 55)
+disInput.Text = tostring(radius)
+disInput.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+disInput.TextColor3 = Color3.new(1,1,1)
+
+-- Nhãn & ô nhập tốc độ
+local spdLabel = Instance.new("TextLabel", frame)
+spdLabel.Text = "Tốc độ quay:"
+spdLabel.Size = UDim2.new(0, 110, 0, 30)
+spdLabel.Position = UDim2.new(0, 10, 0, 90)
+spdLabel.TextColor3 = Color3.new(1,1,1)
+spdLabel.BackgroundTransparency = 1
+
+local spdInput = Instance.new("TextBox", frame)
+spdInput.Size, spdInput.Position = UDim2.new(0, 90, 0, 30), UDim2.new(0, 120, 0, 90)
+spdInput.Text = tostring(speed)
+spdInput.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+spdInput.TextColor3 = Color3.new(1,1,1)
+
+-- HP Label
+local hpLabel = Instance.new("TextLabel", frame)
+hpLabel.Size, hpLabel.Position = UDim2.new(1, -20, 0, 28), UDim2.new(0, 10, 0, 125)
+hpLabel.Text = "Máu mục tiêu: ..."
+hpLabel.TextColor3 = Color3.fromRGB(255, 70, 70)
+hpLabel.BackgroundTransparency = 1
+hpLabel.TextScaled = true
+hpLabel.Font = Enum.Font.GothamBold
+
+-- Auto Đánh + Noclip
+local autoBtn = Instance.new("TextButton", frame)
+autoBtn.Size, autoBtn.Position = UDim2.new(0.5, -15, 0, 35), UDim2.new(0, 10, 0, 160)
+autoBtn.Text = "BẬT: Auto Đánh"
+autoBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+autoBtn.TextColor3 = Color3.new(1,1,1)
+
+local noclipBtn = Instance.new("TextButton", frame)
+noclipBtn.Size, noclipBtn.Position = UDim2.new(0.5, -15, 0, 35), UDim2.new(0.5, 5, 0, 160)
+noclipBtn.Text = "BẬT: Noclip"
+noclipBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+noclipBtn.TextColor3 = Color3.new(1,1,1)
+
+-- Hiện damage
+local function showDamage(target, dmg)
+    if not target:FindFirstChild("HumanoidRootPart") then return end
+    local billboard = Instance.new("BillboardGui")
+    billboard.Size = UDim2.new(0,100,0,50)
+    billboard.Adornee = target.HumanoidRootPart
+    billboard.AlwaysOnTop = true
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.Parent = target
+
+    local text = Instance.new("TextLabel", billboard)
+    text.Size = UDim2.new(1,0,1,0); text.BackgroundTransparency = 1
+    text.Text = "-"..tostring(dmg)
+    text.TextColor3 = Color3.fromRGB(255,0,0)
+    text.TextScaled = true
+    text.Font = Enum.Font.GothamBold
+
+    TweenService:Create(billboard, TweenInfo.new(1), {StudsOffset = Vector3.new(0,6,0)}):Play()
+    TweenService:Create(text, TweenInfo.new(1), {TextTransparency = 1}):Play()
+    game.Debris:AddItem(billboard, 1.2)
+end
+
+-- Tìm mục tiêu (ưu tiên boss)
+local function getTarget()
+    for _,v in pairs(workspace:GetDescendants()) do
+        if v:IsA("Model") and v:FindFirstChild("Humanoid") and v ~= chr and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+            if string.find(string.lower(v.Name), "boss") then return v end
+        end
+    end
+    for _,v in pairs(workspace:GetDescendants()) do
+        if v:IsA("Model") and v:FindFirstChild("Humanoid") and v ~= chr and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+            return v
+        end
+    end
+end
+
+-- Tấn công
+local function attack()
+    local tool = lp.Character and lp.Character:FindFirstChildOfClass("Tool")
+    if tool then pcall(function() tool:Activate() end) end
+end
+
+-- Auto Heal
+local function autoHeal()
+    if healing or hum.Health >= 80 then return end
+    healing = true
+    local currentTool = chr:FindFirstChildOfClass("Tool")
+    local bandage = lp.Backpack:FindFirstChild("Bandage") or lp.Backpack:FindFirstChild("băng gạc")
+    if bandage then
+        bandage.Parent = chr
+        task.wait(0.2)
+        pcall(function() bandage:Activate() end)
+        task.wait(1)
+    end
+    if currentTool and currentTool.Parent == lp.Backpack then currentTool.Parent = chr end
+    healing = false
+end
+
+-- Noclip
+RunService.Stepped:Connect(function()
+    if noclipEnabled then
+        for _, part in pairs(chr:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
+
+noclipBtn.MouseButton1Click:Connect(function()
+    noclipEnabled = not noclipEnabled
+    noclipBtn.Text = (noclipEnabled and "TẮT" or "BẬT") .. ": Noclip"
+end)
+
+-- Di chuyển vòng quanh mục tiêu
+RunService.Heartbeat:Connect(function(dt)
+    autoHeal()
+
+    if running and currentTarget and currentTarget:FindFirstChild("HumanoidRootPart") then
+        local targetHRP = currentTarget.HumanoidRootPart
+        local humanoid = currentTarget:FindFirstChild("Humanoid")
+
+        -- Hiện damage khi máu giảm
+        if humanoid then
+            local oldHP = lastHealth[currentTarget] or humanoid.Health
+            if humanoid.Health < oldHP then
+                local dmg = math.floor(oldHP - humanoid.Health)
+                if dmg > 0 then showDamage(currentTarget, dmg) end
+            end
+            lastHealth[currentTarget] = humanoid.Health
+
+            if humanoid.Health <= 0 then
+                running, autoAttack, currentTarget, targetOffset = false, false, nil, Vector3.new()
+                toggle.Text = "BẬT: Đánh Boss"
+                autoBtn.Text = "BẬT: Auto Đánh"
+                hpLabel.Text = "Máu mục tiêu: Đã chết"
+                return
+            end
+        end
+
+        if targetOffset == Vector3.new() then
+            local dir = (hrp.Position - targetHRP.Position)
+            local horizDir = Vector3.new(dir.X, 0, dir.Z)
+            local len = horizDir.Magnitude
+            if len == 0 then len = 1 end
+            targetOffset = horizDir.Unit * math.min(len, radius)
+            orbitAngle = math.atan2(targetOffset.Z, targetOffset.X) -- SỬA: tính sau khi gán targetOffset
+        end
+
+        orbitAngle = orbitAngle + speed * dt
+        local offset = Vector3.new(math.cos(orbitAngle), 0, math.sin(orbitAngle)) * radius -- SỬA: tính offset riêng
+        local goalPos = targetHRP.Position + offset                                          -- SỬA: rồi mới cộng vào
+
+        TweenService:Create(hrp, TweenInfo.new(0.1), {CFrame = CFrame.new(goalPos, targetHRP.Position)}):Play()
+
+        hum.AutoRotate = false
+        hrp.CFrame = CFrame.new(hrp.Position, targetHRP.Position)
+
+        if autoAttack then attack() end
+        hpLabel.Text = "Máu mục tiêu: " .. math.floor(humanoid.Health)
+
+    elseif running then
+        running, autoAttack, currentTarget, targetOffset = false, false, nil, Vector3.new()
+        toggle.Text = "BẬT: Đánh Boss"
+        autoBtn.Text = "BẬT: Auto Đánh"
+        hpLabel.Text = "Máu mục tiêu: Không tìm thấy"
+    end
+end)
+
+-- Bật/tắt chạy vòng
+toggle.MouseButton1Click:Connect(function()
+    running = not running
+    if running then
+        currentTarget = getTarget()
+        targetOffset = Vector3.new()
+        toggle.Text = "TẮT: Đánh Boss"
+
+        -- Loop 0.58s reset nhẹ để bám lại mục tiêu
+        task.spawn(function()
+            while running do
+                task.wait(0.58)
+                if running then
+                    running = false
+                    toggle.Text = "BẬT: Đánh Boss"
+                    task.wait(0.12)
+                    running = true
+                    currentTarget = getTarget()
+                    targetOffset = Vector3.new()
+                    toggle.Text = "TẮT: Đánh Boss"
+                end
+            end
+        end)
+    else
+        toggle.Text = "BẬT: Đánh Boss"
+    end
+end)
+
+-- Auto đánh riêng
+autoBtn.MouseButton1Click:Connect(function()
+    autoAttack = not autoAttack
+    autoBtn.Text = (autoAttack and "TẮT" or "BẬT") .. ": Auto Đánh"
+end)
+
+-- Cập nhật radius & speed
+disInput.FocusLost:Connect(function()
+    radius = tonumber(disInput.Text) or radius
+end)
+spdInput.FocusLost:Connect(function()
+    speed = tonumber(spdInput.Text) or speed
+end)
