@@ -1,555 +1,320 @@
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local lp = Players.LocalPlayer
+local chr = lp.Character or lp.CharacterAdded:Wait()
+local hum = chr:WaitForChild("Humanoid")
+local hrp = chr:WaitForChild("HumanoidRootPart")
 
+-- Biến
+local radius, speed = 30, 2.3
+local running, autoAttack, noclipEnabled, healing = false, false, false, false
+local currentTarget, targetOffset, orbitAngle = nil, Vector3.new(), 0
+local lastHealth = {}
+
+-- GUI
+local gui = Instance.new("ScreenGui", lp:WaitForChild("PlayerGui"))
+gui.Name = "Menu_TT"
+gui.Enabled = true
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 260, 0, 220) -- nhỏ gọn hơn
+frame.Position = UDim2.new(0.5, -130, 0.5, -110)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+frame.Active, frame.Draggable = true, true
+
+-- Viền 7 màu
+local uiStroke = Instance.new("UIStroke", frame)
+uiStroke.Thickness = 3
+uiStroke.LineJoinMode = Enum.LineJoinMode.Round
+task.spawn(function()
+    local hue = 0
+    while task.wait(0.05) do
+        hue = (hue + 2) % 360
+        uiStroke.Color = Color3.fromHSV(hue/360, 1, 1)
+    end
+end)
+
+-- Title "Cuong Hub" trên đầu
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 35)
+title.Position = UDim2.new(0, 0, 0, -40)
+title.Text = "Cuong Hub"
+title.TextColor3 = Color3.fromRGB(100,255,100)
+title.BackgroundTransparency = 1
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+
+-- Nút Đánh Boss
+local toggle = Instance.new("TextButton", frame)
+toggle.Size, toggle.Position = UDim2.new(1, -20, 0, 40), UDim2.new(0, 10, 0, 10)
+toggle.Text = "BẬT: Đánh Boss"
+toggle.TextColor3 = Color3.new(1,1,1)
+toggle.BackgroundColor3 = Color3.fromRGB(40,40,40)
+
+-- Nhãn & ô nhập khoảng cách
+local disLabel = Instance.new("TextLabel", frame)
+disLabel.Text = "Khoảng cách:"
+disLabel.Size = UDim2.new(0, 110, 0, 30)
+disLabel.Position = UDim2.new(0, 10, 0, 55)
+disLabel.TextColor3 = Color3.new(1,1,1)
+disLabel.BackgroundTransparency = 1
+
+local disInput = Instance.new("TextBox", frame)
+disInput.Size, disInput.Position = UDim2.new(0, 90, 0, 30), UDim2.new(0, 120, 0, 55)
+disInput.Text = tostring(radius)
+disInput.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+disInput.TextColor3 = Color3.new(1,1,1)
+
+-- Nhãn & ô nhập tốc độ
+local spdLabel = Instance.new("TextLabel", frame)
+spdLabel.Text = "Tốc độ quay:"
+spdLabel.Size = UDim2.new(0, 110, 0, 30)
+spdLabel.Position = UDim2.new(0, 10, 0, 90)
+spdLabel.TextColor3 = Color3.new(1,1,1)
+spdLabel.BackgroundTransparency = 1
+
+local spdInput = Instance.new("TextBox", frame)
+spdInput.Size, spdInput.Position = UDim2.new(0, 90, 0, 30), UDim2.new(0, 120, 0, 90)
+spdInput.Text = tostring(speed)
+spdInput.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+spdInput.TextColor3 = Color3.new(1,1,1)
+
+-- HP Label
+local hpLabel = Instance.new("TextLabel", frame)
+hpLabel.Size, hpLabel.Position = UDim2.new(1, -20, 0, 28), UDim2.new(0, 10, 0, 125)
+hpLabel.Text = "Máu mục tiêu: ..."
+hpLabel.TextColor3 = Color3.fromRGB(255, 70, 70)
+hpLabel.BackgroundTransparency = 1
+hpLabel.TextScaled = true
+hpLabel.Font = Enum.Font.GothamBold
+
+-- Auto Đánh + Noclip
+local autoBtn = Instance.new("TextButton", frame)
+autoBtn.Size, autoBtn.Position = UDim2.new(0.5, -15, 0, 35), UDim2.new(0, 10, 0, 160)
+autoBtn.Text = "BẬT: Auto Đánh"
+autoBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+autoBtn.TextColor3 = Color3.new(1,1,1)
+
+local noclipBtn = Instance.new("TextButton", frame)
+noclipBtn.Size, noclipBtn.Position = UDim2.new(0.5, -15, 0, 35), UDim2.new(0.5, 5, 0, 160)
+noclipBtn.Text = "BẬT: Noclip"
+noclipBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+noclipBtn.TextColor3 = Color3.new(1,1,1)
+
+-- Hiện damage
+local function showDamage(target, dmg)
+    if not target:FindFirstChild("HumanoidRootPart") then return end
+    local billboard = Instance.new("BillboardGui")
+    billboard.Size = UDim2.new(0,100,0,50)
+    billboard.Adornee = target.HumanoidRootPart
+    billboard.AlwaysOnTop = true
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.Parent = target
+
+    local text = Instance.new("TextLabel", billboard)
+    text.Size = UDim2.new(1,0,1,0); text.BackgroundTransparency = 1
+    text.Text = "-"..tostring(dmg)
+    text.TextColor3 = Color3.fromRGB(255,0,0)
+    text.TextScaled = true
+    text.Font = Enum.Font.GothamBold
+
+    TweenService:Create(billboard, TweenInfo.new(1), {StudsOffset = Vector3.new(0,6,0)}):Play()
+    TweenService:Create(text, TweenInfo.new(1), {TextTransparency = 1}):Play()
+    game.Debris:AddItem(billboard, 1.2)
+end
+
+-- Tìm mục tiêu (ưu tiên boss)
+local function getTarget()
+    for _,v in pairs(workspace:GetDescendants()) do
+        if v:IsA("Model") and v:FindFirstChild("Humanoid") and v ~= chr and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+            if string.find(string.lower(v.Name), "boss") then return v end
+        end
+    end
+    for _,v in pairs(workspace:GetDescendants()) do
+        if v:IsA("Model") and v:FindFirstChild("Humanoid") and v ~= chr and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+            return v
+        end
+    end
+end
+
+-- Tấn công
+local function attack()
+    local tool = lp.Character and lp.Character:FindFirstChildOfClass("Tool")
+    if tool then pcall(function() tool:Activate() end) end
+end
+
+-- Auto Heal
+local function autoHeal()
+    if healing or hum.Health >= 80 then return end
+    healing = true
+    local currentTool = chr:FindFirstChildOfClass("Tool")
+    local bandage = lp.Backpack:FindFirstChild("Bandage") or lp.Backpack:FindFirstChild("băng gạc")
+    if bandage then
+        bandage.Parent = chr
+        task.wait(0.2)
+        pcall(function() bandage:Activate() end)
+        task.wait(1)
+    end
+    if currentTool and currentTool.Parent == lp.Backpack then currentTool.Parent = chr end
+    healing = false
+end
+
+-- Noclip
+RunService.Stepped:Connect(function()
+    if noclipEnabled then
+        for _, part in pairs(chr:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
+
+noclipBtn.MouseButton1Click:Connect(function()
+    noclipEnabled = not noclipEnabled
+    noclipBtn.Text = (noclipEnabled and "TẮT" or "BẬT") .. ": Noclip"
+end)
+
+-- Di chuyển vòng quanh mục tiêu
+RunService.Heartbeat:Connect(function(dt)
+    autoHeal()
+
+    if running and currentTarget and currentTarget:FindFirstChild("HumanoidRootPart") then
+        local targetHRP = currentTarget.HumanoidRootPart
+        local humanoid = currentTarget:FindFirstChild("Humanoid")
+
+        -- Hiện damage khi máu giảm
+        if humanoid then
+            local oldHP = lastHealth[currentTarget] or humanoid.Health
+            if humanoid.Health < oldHP then
+                local dmg = math.floor(oldHP - humanoid.Health)
+                if dmg > 0 then showDamage(currentTarget, dmg) end
+            end
+            lastHealth[currentTarget] = humanoid.Health
+
+            if humanoid.Health <= 0 then
+                running, autoAttack, currentTarget, targetOffset = false, false, nil, Vector3.new()
+                toggle.Text = "BẬT: Đánh Boss"
+                autoBtn.Text = "BẬT: Auto Đánh"
+                hpLabel.Text = "Máu mục tiêu: Đã chết"
+                return
+            end
+        end
+
+        if targetOffset == Vector3.new() then
+            local dir = (hrp.Position - targetHRP.Position)
+            local horizDir = Vector3.new(dir.X, 0, dir.Z)
+            local len = horizDir.Magnitude
+            if len == 0 then len = 1 end
+            targetOffset = horizDir.Unit * math.min(len, radius)
+            orbitAngle = math.atan2(targetOffset.Z, targetOffset.X) -- SỬA: tính sau khi gán targetOffset
+        end
+
+        orbitAngle = orbitAngle + speed * dt
+        local offset = Vector3.new(math.cos(orbitAngle), 0, math.sin(orbitAngle)) * radius -- SỬA: tính offset riêng
+        local goalPos = targetHRP.Position + offset                                          -- SỬA: rồi mới cộng vào
+
+        TweenService:Create(hrp, TweenInfo.new(0.1), {CFrame = CFrame.new(goalPos, targetHRP.Position)}):Play()
+
+        hum.AutoRotate = false
+        hrp.CFrame = CFrame.new(hrp.Position, targetHRP.Position)
+
+        if autoAttack then attack() end
+        hpLabel.Text = "Máu mục tiêu: " .. math.floor(humanoid.Health)
+
+    elseif running then
+        running, autoAttack, currentTarget, targetOffset = false, false, nil, Vector3.new()
+        toggle.Text = "BẬT: Đánh Boss"
+        autoBtn.Text = "BẬT: Auto Đánh"
+        hpLabel.Text = "Máu mục tiêu: Không tìm thấy"
+    end
+end)
+
+-- Bật/tắt chạy vòng
+toggle.MouseButton1Click:Connect(function()
+    running = not running
+    if running then
+        currentTarget = getTarget()
+        targetOffset = Vector3.new()
+        toggle.Text = "TẮT: Đánh Boss"
+
+        -- Loop 0.58s reset nhẹ để bám lại mục tiêu
+        task.spawn(function()
+            while running do
+                task.wait(0.58)
+                if running then
+                    running = false
+                    toggle.Text = "BẬT: Đánh Boss"
+                    task.wait(0.12)
+                    running = true
+                    currentTarget = getTarget()
+                    targetOffset = Vector3.new()
+                    toggle.Text = "TẮT: Đánh Boss"
+                end
+            end
+        end)
+    else
+        toggle.Text = "BẬT: Đánh Boss"
+    end
+end)
+
+-- Auto đánh riêng
+autoBtn.MouseButton1Click:Connect(function()
+    autoAttack = not autoAttack
+    autoBtn.Text = (autoAttack and "TẮT" or "BẬT") .. ": Auto Đánh"
+end)
+
+-- Cập nhật radius & speed
+disInput.FocusLost:Connect(function()
+    radius = tonumber(disInput.Text) or radius
+end)
+spdInput.FocusLost:Connect(function()
+    speed = tonumber(spdInput.Text) or speed
+end)
+
+local Players = game:GetService("Players")
 local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local RunService = game:GetService("RunService")
 
--- Tạo GUI
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "NPCAssist"
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-ScreenGui.Parent = player.PlayerGui
+local autoCollect = true
 
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 220, 0, 230)
-MainFrame.Position = UDim2.new(0, 10, 0, 10)
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-MainFrame.BorderSizePixel = 0
-MainFrame.Parent = ScreenGui
-
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 8)
-UICorner.Parent = MainFrame
-
-local UIStroke = Instance.new("UIStroke")
-UIStroke.Color = Color3.fromRGB(60, 60, 70)
-UIStroke.Thickness = 2
-UIStroke.Parent = MainFrame
-
--- Tiêu đề
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 25)
-Title.Position = UDim2.new(0, 0, 0, 0)
-Title.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-Title.TextColor3 = Color3.fromRGB(220, 220, 220)
-Title.Text = "NPC Assist - STEALTH"
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 12
-Title.Parent = MainFrame
-
-local TitleCorner = Instance.new("UICorner")
-TitleCorner.CornerRadius = UDim.new(0, 8)
-TitleCorner.Parent = Title
-
--- Toggle Fly
-local FlyToggle = Instance.new("TextButton")
-FlyToggle.Size = UDim2.new(0.9, 0, 0, 25)
-FlyToggle.Position = UDim2.new(0.05, 0, 0.15, 0)
-FlyToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-FlyToggle.TextColor3 = Color3.fromRGB(220, 220, 220)
-FlyToggle.Text = "STEALTH FLY: OFF"
-FlyToggle.Font = Enum.Font.Gotham
-FlyToggle.TextSize = 11
-FlyToggle.Parent = MainFrame
-
-local FlyCorner = Instance.new("UICorner")
-FlyCorner.CornerRadius = UDim.new(0, 6)
-FlyCorner.Parent = FlyToggle
-
--- Textbox khoảng cách
-local DistanceBox = Instance.new("TextBox")
-DistanceBox.Size = UDim2.new(0.4, 0, 0, 25)
-DistanceBox.Position = UDim2.new(0.05, 0, 0.32, 0)
-DistanceBox.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
-DistanceBox.TextColor3 = Color3.fromRGB(220, 220, 220)
-DistanceBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
-DistanceBox.PlaceholderText = "Khoảng cách"
-DistanceBox.Text = "8"
-DistanceBox.Font = Enum.Font.Gotham
-DistanceBox.TextSize = 11
-DistanceBox.Parent = MainFrame
-
-local DistanceCorner = Instance.new("UICorner")
-DistanceCorner.CornerRadius = UDim.new(0, 6)
-DistanceCorner.Parent = DistanceBox
-
--- Label khoảng cách
-local DistanceLabel = Instance.new("TextLabel")
-DistanceLabel.Size = UDim2.new(0.5, 0, 0, 25)
-DistanceLabel.Position = UDim2.new(0.5, 0, 0.32, 0)
-DistanceLabel.BackgroundTransparency = 1
-DistanceLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-DistanceLabel.Text = "Studs"
-DistanceLabel.Font = Enum.Font.Gotham
-DistanceLabel.TextSize = 10
-DistanceLabel.TextXAlignment = Enum.TextXAlignment.Left
-DistanceLabel.Parent = MainFrame
-
--- Textbox tốc độ quay
-local SpeedBox = Instance.new("TextBox")
-SpeedBox.Size = UDim2.new(0.4, 0, 0, 25)
-SpeedBox.Position = UDim2.new(0.05, 0, 0.49, 0)
-SpeedBox.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
-SpeedBox.TextColor3 = Color3.fromRGB(220, 220, 220)
-SpeedBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
-SpeedBox.PlaceholderText = "Tốc độ quay"
-SpeedBox.Text = "1.5"
-SpeedBox.Font = Enum.Font.Gotham
-SpeedBox.TextSize = 11
-SpeedBox.Parent = MainFrame
-
-local SpeedCorner = Instance.new("UICorner")
-SpeedCorner.CornerRadius = UDim.new(0, 6)
-SpeedCorner.Parent = SpeedBox
-
--- Label tốc độ quay
-local SpeedLabel = Instance.new("TextLabel")
-SpeedLabel.Size = UDim2.new(0.5, 0, 0, 25)
-SpeedLabel.Position = UDim2.new(0.5, 0, 0.49, 0)
-SpeedLabel.BackgroundTransparency = 1
-SpeedLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-SpeedLabel.Text = "Speed"
-SpeedLabel.Font = Enum.Font.Gotham
-SpeedLabel.TextSize = 10
-SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
-SpeedLabel.Parent = MainFrame
-
--- Toggle Auto Tool
-local ToolToggle = Instance.new("TextButton")
-ToolToggle.Size = UDim2.new(0.9, 0, 0, 25)
-ToolToggle.Position = UDim2.new(0.05, 0, 0.66, 0)
-ToolToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-ToolToggle.TextColor3 = Color3.fromRGB(220, 220, 220)
-ToolToggle.Text = "AUTO TOOL: OFF"
-ToolToggle.Font = Enum.Font.Gotham
-ToolToggle.TextSize = 11
-ToolToggle.Parent = MainFrame
-
-local ToolCorner = Instance.new("UICorner")
-ToolCorner.CornerRadius = UDim.new(0, 6)
-ToolCorner.Parent = ToolToggle
-
--- Toggle Orbit Mode
-local OrbitToggle = Instance.new("TextButton")
-OrbitToggle.Size = UDim2.new(0.9, 0, 0, 25)
-OrbitToggle.Position = UDim2.new(0.05, 0, 0.83, 0)
-OrbitToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-OrbitToggle.TextColor3 = Color3.fromRGB(220, 220, 220)
-OrbitToggle.Text = "ORBIT MODE: OFF"
-OrbitToggle.Font = Enum.Font.Gotham
-OrbitToggle.TextSize = 11
-OrbitToggle.Parent = MainFrame
-
-local OrbitCorner = Instance.new("UICorner")
-OrbitCorner.CornerRadius = UDim.new(0, 6)
-OrbitCorner.Parent = OrbitToggle
-
--- Biến điều khiển
-local isFlying = false
-local isAutoTool = false
-local isOrbiting = false
-local currentDistance = 8
-local currentSpeed = 1.5
-local flyConnection = nil
-local toolConnection = nil
-local orbitConnection = nil
-
--- Hiệu ứng hover cho buttons
-local function setupButtonHover(button)
-    button.MouseEnter:Connect(function()
-        if button == FlyToggle and not isFlying then
-            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 65)}):Play()
-        elseif button == ToolToggle and not isAutoTool then
-            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 65)}):Play()
-        elseif button == OrbitToggle and not isOrbiting then
-            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 65)}):Play()
-        end
-    end)
-    
-    button.MouseLeave:Connect(function()
-        if button == FlyToggle and not isFlying then
-            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 55)}):Play()
-        elseif button == ToolToggle and not isAutoTool then
-            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 55)}):Play()
-        elseif button == OrbitToggle and not isOrbiting then
-            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 55)}):Play()
-        end
-    end)
-end
-
-setupButtonHover(FlyToggle)
-setupButtonHover(ToolToggle)
-setupButtonHover(OrbitToggle)
-
--- Hàm tìm boss
-function findNearestNPC()
-    local npcsFolder = workspace:FindFirstChild("GiangHo2")
-    if not npcsFolder then 
-        StatusLabel.Text = "Không tìm thấy GiangHo2"
-        return nil 
-    end
-    
-    npcsFolder = npcsFolder:FindFirstChild("NPCs")
-    if not npcsFolder then 
-        StatusLabel.Text = "Không tìm thấy NPCs"
-        return nil 
-    end
-    
-    local nearestNPC = nil
-    local nearestDistance = math.huge
-    
-    for _, npc in pairs(npcsFolder:GetChildren()) do
-        if npc:IsA("Model") then
-            local npcRoot = npc:FindFirstChild("HumanoidRootPart") or npc:FindFirstChild("Head") or npc:FindFirstChild("Torso")
-            if npcRoot and humanoidRootPart then
-                local distance = (npcRoot.Position - humanoidRootPart.Position).Magnitude
-                if distance < nearestDistance then
-                    nearestDistance = distance
-                    nearestNPC = npc
-                end
+RunService.RenderStepped:Connect(function()
+    if not autoCollect then return end
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("ProximityPrompt") and (obj.Parent.Name == "Cash" or obj.Parent.Name == "Chest") then
+            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if hrp and (hrp.Position - obj.Parent.Position).Magnitude <= 100 then
+                pcall(function() fireproximityprompt(obj) end)
             end
         end
     end
-    
-    if nearestNPC then
-        StatusLabel.Text = "Đã tìm thấy NPC"
-    else
-        StatusLabel.Text = "Không tìm thấy NPC"
-    end
-    
-    return nearestNPC
-end
+end)
 
--- Hàm lấy tool
-function getTool()
-    if not character then return nil end
-    for _, tool in pairs(character:GetChildren()) do
-        if tool:IsA("Tool") then
-            return tool
-        end
-    end
-    return nil
-end
+local collectBtn = Instance.new("TextButton", frame)
+collectBtn.Size, collectBtn.Position = UDim2.new(1, -20, 0, 35), UDim2.new(0, 10, 0, 200)
+collectBtn.Text = "BẬT: Auto Nhặt"
+collectBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+collectBtn.TextColor3 = Color3.new(1,1,1)
 
--- Hàm di chuyển stealth (tránh anti-cheat)
-function stealthMoveToPosition(targetPosition)
-    if not humanoidRootPart then return false end
-    
-    -- Tính vector di chuyển
-    local direction = (targetPosition - humanoidRootPart.Position)
-    local distance = direction.Magnitude
-    
-    -- Nếu quá gần thì không di chuyển
-    if distance < 2 then
-        return true
-    end
-    
-    -- Giới hạn tốc độ di chuyển để trông tự nhiên
-    local maxSpeed = 25
-    if distance > 10 then
-        direction = direction.Unit * math.min(distance, maxSpeed)
-    else
-        direction = direction.Unit * (distance * 0.5) -- Di chuyển chậm khi gần
-    end
-    
-    -- Sử dụng Humanoid thay vì trực tiếp set CFrame
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
-    if humanoid then
-        -- Giả lập movement bằng cách set velocity một cách tự nhiên
-        humanoidRootPart.Velocity = direction
-        
-        -- Xoay character về phía NPC
-        local npc = findNearestNPC()
-        if npc then
-            local npcRoot = npc:FindFirstChild("HumanoidRootPart") or npc:FindFirstChild("Head") or npc:FindFirstChild("Torso")
-            if npcRoot then
-                humanoidRootPart.CFrame = CFrame.new(humanoidRootPart.Position, Vector3.new(npcRoot.Position.X, humanoidRootPart.Position.Y, npcRoot.Position.Z))
+local autoCollect = false
+
+collectBtn.MouseButton1Click:Connect(function()
+    autoCollect = not autoCollect
+    collectBtn.Text = (autoCollect and "TẮT" or "BẬT") .. ": Auto Nhặt"
+end)
+
+RunService.RenderStepped:Connect(function()
+    if not autoCollect then return end
+    local player = lp
+    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("ProximityPrompt") and (obj.Parent.Name == "Cash" or obj.Parent.Name == "Chest") then
+            local dist = (hrp.Position - obj.Parent.Position).Magnitude
+            if dist <= 100 then
+                pcall(function() fireproximityprompt(obj) end)
             end
         end
-    end
-    
-    return true
-end
-
--- Hàm bay stealth (orbit quanh NPC thay vì lên đầu)
-function stealthOrbitNPC()
-    local npc = findNearestNPC()
-    if not npc then 
-        StatusLabel.Text = "Không tìm thấy NPC"
-        return false 
-    end
-    
-    local npcRoot = npc:FindFirstChild("HumanoidRootPart") or npc:FindFirstChild("Head") or npc:FindFirstChild("Torso")
-    if not npcRoot then 
-        StatusLabel.Text = "NPC không có root part"
-        return false 
-    end
-    
-    if not humanoidRootPart then 
-        StatusLabel.Text = "Không có HumanoidRootPart"
-        return false 
-    end
-
-    -- Cập nhật khoảng cách từ textbox
-    local newDistance = tonumber(DistanceBox.Text)
-    if newDistance and newDistance > 0 then
-        currentDistance = newDistance
-    else
-        DistanceBox.Text = tostring(currentDistance)
-    end
-    
-    -- Cập nhật tốc độ từ textbox
-    local newSpeed = tonumber(SpeedBox.Text)
-    if newSpeed and newSpeed > 0 then
-        currentSpeed = newSpeed
-    else
-        SpeedBox.Text = tostring(currentSpeed)
-    end
-    
-    if isOrbiting then
-        -- Chế độ orbit: bay vòng quanh NPC với tốc độ có thể chỉnh
-        local angle = tick() * currentSpeed -- Tốc độ orbit có thể chỉnh
-        local offset = Vector3.new(math.cos(angle) * currentDistance, 3, math.sin(angle) * currentDistance) -- Cao hơn NPC 3 studs
-        local targetPosition = npcRoot.Position + offset
-        
-        stealthMoveToPosition(targetPosition)
-        StatusLabel.Text = "Đang orbit... Tốc độ: " .. currentSpeed
-    else
-        -- Chế độ thường: đứng ở khoảng cách an toàn
-        local direction = (humanoidRootPart.Position - npcRoot.Position).Unit
-        local targetPosition = npcRoot.Position + (direction * currentDistance)
-        targetPosition = Vector3.new(targetPosition.X, npcRoot.Position.Y + 2, targetPosition.Z) -- Cao hơn một chút
-        
-        stealthMoveToPosition(targetPosition)
-        StatusLabel.Text = "Đang giữ khoảng cách..."
-    end
-    
-    return true
-end
-
--- Hàm sử dụng tool tự động
-function useToolAutomatically()
-    local tool = getTool()
-    if tool then
-        -- Sử dụng tool với delay ngẫu nhiên để tránh bị phát hiện
-        if math.random(1, 3) == 1 then -- Chỉ kích hoạt 1/3 thời gian
-            tool:Activate()
-        end
-    end
-end
-
--- Hàm bắt đầu bay stealth
-function startStealthFlying()
-    if flyConnection then
-        flyConnection:Disconnect()
-        flyConnection = nil
-    end
-    
-    flyConnection = RunService.Heartbeat:Connect(function()
-        -- Thêm delay ngẫu nhiên để movement trông tự nhiên hơn
-        if math.random(1, 2) == 1 then
-            local success = stealthOrbitNPC()
-            if not success then
-                StatusLabel.Text = "Lỗi khi bay"
-            end
-        end
-    end)
-end
-
--- Hàm dừng bay
-function stopStealthFlying()
-    if flyConnection then
-        flyConnection:Disconnect()
-        flyConnection = nil
-    end
-    
-    -- Reset velocity khi dừng
-    if humanoidRootPart then
-        humanoidRootPart.Velocity = Vector3.new(0, 0, 0)
-    end
-    
-    StatusLabel.Text = "Đã dừng bay"
-end
-
--- Sự kiện Fly Toggle
-FlyToggle.MouseButton1Click:Connect(function()
-    isFlying = not isFlying
-    
-    if isFlying then
-        -- Bật fly stealth
-        local success = pcall(function()
-            FlyToggle.BackgroundColor3 = Color3.fromRGB(0, 120, 60)
-            FlyToggle.Text = "STEALTH FLY: ON"
-            startStealthFlying()
-        end)
-        
-        if not success then
-            isFlying = false
-            FlyToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-            FlyToggle.Text = "STEALTH FLY: OFF"
-            StatusLabel.Text = "Lỗi khi bật fly"
-        end
-    else
-        -- Tắt fly
-        FlyToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-        FlyToggle.Text = "STEALTH FLY: OFF"
-        stopStealthFlying()
-    end
-end)
-
--- Sự kiện Auto Tool Toggle
-ToolToggle.MouseButton1Click:Connect(function()
-    isAutoTool = not isAutoTool
-    
-    if isAutoTool then
-        -- Bật auto tool
-        ToolToggle.BackgroundColor3 = Color3.fromRGB(0, 100, 180)
-        ToolToggle.Text = "AUTO TOOL: ON"
-        
-        if isFlying and not toolConnection then
-            toolConnection = RunService.Heartbeat:Connect(function()
-                -- Sử dụng tool với xác suất thấp hơn để stealth
-                if math.random(1, 4) == 1 then
-                    useToolAutomatically()
-                end
-            end)
-        end
-    else
-        -- Tắt auto tool
-        ToolToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-        ToolToggle.Text = "AUTO TOOL: OFF"
-        
-        if toolConnection then
-            toolConnection:Disconnect()
-            toolConnection = nil
-        end
-    end
-end)
-
--- Sự kiện Orbit Toggle
-OrbitToggle.MouseButton1Click:Connect(function()
-    isOrbiting = not isOrbiting
-    
-    if isOrbiting then
-        -- Bật orbit mode
-        OrbitToggle.BackgroundColor3 = Color3.fromRGB(120, 0, 180)
-        OrbitToggle.Text = "ORBIT MODE: ON"
-        StatusLabel.Text = "Đã bật chế độ orbit"
-    else
-        -- Tắt orbit mode
-        OrbitToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-        OrbitToggle.Text = "ORBIT MODE: OFF"
-        StatusLabel.Text = "Đã tắt chế độ orbit"
-    end
-end)
-
--- Xử lý textbox khoảng cách
-DistanceBox.FocusLost:Connect(function(enterPressed)
-    local newDistance = tonumber(DistanceBox.Text)
-    if newDistance and newDistance >= 5 and newDistance <= 20 then
-        currentDistance = newDistance
-        DistanceBox.Text = tostring(currentDistance)
-        StatusLabel.Text = "Khoảng cách: " .. currentDistance .. " studs"
-    else
-        DistanceBox.Text = tostring(currentDistance)
-        StatusLabel.Text = "Khoảng cách phải từ 5-20"
-    end
-end)
-
--- Xử lý textbox tốc độ quay
-SpeedBox.FocusLost:Connect(function(enterPressed)
-    local newSpeed = tonumber(SpeedBox.Text)
-    if newSpeed and newSpeed >= 0.1 and newSpeed <= 5 then
-        currentSpeed = newSpeed
-        SpeedBox.Text = tostring(currentSpeed)
-        StatusLabel.Text = "Tốc độ quay: " .. currentSpeed
-    else
-        SpeedBox.Text = tostring(currentSpeed)
-        StatusLabel.Text = "Tốc độ phải từ 0.1-5"
-    end
-end)
-
--- Xử lý khi character respawn
-player.CharacterAdded:Connect(function(newCharacter)
-    character = newCharacter
-    humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-    
-    -- Reset trạng thái khi respawn
-    if isFlying then
-        isFlying = false
-        FlyToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-        FlyToggle.Text = "STEALTH FLY: OFF"
-        stopStealthFlying()
-    end
-    
-    if isAutoTool then
-        isAutoTool = false
-        ToolToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-        ToolToggle.Text = "AUTO TOOL: OFF"
-        if toolConnection then
-            toolConnection:Disconnect()
-            toolConnection = nil
-        end
-    end
-    
-    if isOrbiting then
-        isOrbiting = false
-        OrbitToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-        OrbitToggle.Text = "ORBIT MODE: OFF"
-    end
-end)
-
--- Kéo GUI
-local dragging = false
-local dragInput, dragStart, startPos
-
-local function update(input)
-    local delta = input.Position - dragStart
-    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-end
-
-Title.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = MainFrame.Position
-        
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
-end)
-
-Title.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
-    end
-end)
-
-game:GetService("UserInputService").InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        update(input)
-    end
-end)
-
--- Debug info
-print("NPC Assist STEALTH đã được tạo!")
-print("Bypass anti-cheat activated")
-print("Đường dẫn NPC: workspace.GiangHo2.NPCs")
-
--- Test tìm NPC
-spawn(function()
-    wait(2)
-    local npc = findNearestNPC()
-    if npc then
-        print("Tìm thấy NPC:", npc.Name)
-        StatusLabel.Text = "STEALTH READY - Đã tìm thấy NPC"
-    else
-        print("Không tìm thấy NPC")
-        StatusLabel.Text = "Không tìm thấy NPC"
     end
 end)
