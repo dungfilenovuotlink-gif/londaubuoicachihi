@@ -11,22 +11,49 @@ local radius, speed = 30, 2.3
 local running, autoAttack, noclipEnabled, healing = false, false, false, false
 local currentTarget, targetOffset, orbitAngle = nil, Vector3.new(), 0
 local lastHealth = {}
-
--- GUI
-local gui = Instance.new("ScreenGui", lp:WaitForChild("PlayerGui"))
+-- gui
+local gui = Instance.new("ScreenGui")
+gui.Parent = lp:WaitForChild("PlayerGui")
 gui.Name = "Menu_TT"
 gui.Enabled = true
 
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 260, 0, 220) -- nhỏ gọn hơn
+local toggleGuiBtn = Instance.new("ImageButton")
+toggleGuiBtn.Parent = gui
+toggleGuiBtn.Size = UDim2.new(0, 50, 0, 50)
+toggleGuiBtn.Position = UDim2.new(0, 10, 0, 10)
+toggleGuiBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+toggleGuiBtn.BorderSizePixel = 0
+
+toggleGuiBtn.Image = "rbxassetid://74432865813529"
+toggleGuiBtn.ScaleType = Enum.ScaleType.Crop
+
+local toggleBtnStroke = Instance.new("UIStroke")
+toggleBtnStroke.Parent = toggleGuiBtn
+toggleBtnStroke.Thickness = 2
+toggleBtnStroke.LineJoinMode = Enum.LineJoinMode.Round
+
+task.spawn(function()
+    local hue = 0
+    while task.wait(0.05) do
+        hue = (hue + 2) % 360
+        toggleBtnStroke.Color = Color3.fromHSV(hue/360, 1, 1)
+    end
+end)
+
+local frame = Instance.new("Frame")
+frame.Parent = gui
+frame.Size = UDim2.new(0, 260, 0, 220)
 frame.Position = UDim2.new(0.5, -130, 0.5, -110)
 frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-frame.Active, frame.Draggable = true, true
+frame.Active = true
+frame.Draggable = true
 
 -- Viền 7 màu
-local uiStroke = Instance.new("UIStroke", frame)
+local uiStroke = Instance.new("UIStroke")
+uiStroke.Parent = frame
 uiStroke.Thickness = 3
 uiStroke.LineJoinMode = Enum.LineJoinMode.Round
+
 task.spawn(function()
     local hue = 0
     while task.wait(0.05) do
@@ -36,7 +63,8 @@ task.spawn(function()
 end)
 
 -- Title "Cuong Hub" trên đầu
-local title = Instance.new("TextLabel", frame)
+local title = Instance.new("TextLabel")
+title.Parent = frame
 title.Size = UDim2.new(1, 0, 0, 35)
 title.Position = UDim2.new(0, 0, 0, -40)
 title.Text = "Cuong Hub"
@@ -46,43 +74,53 @@ title.TextScaled = true
 title.Font = Enum.Font.GothamBold
 
 -- Nút Đánh Boss
-local toggle = Instance.new("TextButton", frame)
-toggle.Size, toggle.Position = UDim2.new(1, -20, 0, 40), UDim2.new(0, 10, 0, 10)
+local toggle = Instance.new("TextButton")
+toggle.Parent = frame
+toggle.Size = UDim2.new(1, -20, 0, 40)
+toggle.Position = UDim2.new(0, 10, 0, 10)
 toggle.Text = "BẬT: Đánh Boss"
 toggle.TextColor3 = Color3.new(1,1,1)
 toggle.BackgroundColor3 = Color3.fromRGB(40,40,40)
 
 -- Nhãn & ô nhập khoảng cách
-local disLabel = Instance.new("TextLabel", frame)
+local disLabel = Instance.new("TextLabel")
+disLabel.Parent = frame
 disLabel.Text = "Khoảng cách:"
 disLabel.Size = UDim2.new(0, 110, 0, 30)
 disLabel.Position = UDim2.new(0, 10, 0, 55)
 disLabel.TextColor3 = Color3.new(1,1,1)
 disLabel.BackgroundTransparency = 1
 
-local disInput = Instance.new("TextBox", frame)
-disInput.Size, disInput.Position = UDim2.new(0, 90, 0, 30), UDim2.new(0, 120, 0, 55)
+local disInput = Instance.new("TextBox")
+disInput.Parent = frame
+disInput.Size = UDim2.new(0, 90, 0, 30)
+disInput.Position = UDim2.new(0, 120, 0, 55)
 disInput.Text = tostring(radius)
 disInput.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 disInput.TextColor3 = Color3.new(1,1,1)
 
 -- Nhãn & ô nhập tốc độ
-local spdLabel = Instance.new("TextLabel", frame)
+local spdLabel = Instance.new("TextLabel")
+spdLabel.Parent = frame
 spdLabel.Text = "Tốc độ quay:"
 spdLabel.Size = UDim2.new(0, 110, 0, 30)
 spdLabel.Position = UDim2.new(0, 10, 0, 90)
 spdLabel.TextColor3 = Color3.new(1,1,1)
 spdLabel.BackgroundTransparency = 1
 
-local spdInput = Instance.new("TextBox", frame)
-spdInput.Size, spdInput.Position = UDim2.new(0, 90, 0, 30), UDim2.new(0, 120, 0, 90)
+local spdInput = Instance.new("TextBox")
+spdInput.Parent = frame
+spdInput.Size = UDim2.new(0, 90, 0, 30)
+spdInput.Position = UDim2.new(0, 120, 0, 90)
 spdInput.Text = tostring(speed)
 spdInput.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 spdInput.TextColor3 = Color3.new(1,1,1)
 
 -- HP Label
-local hpLabel = Instance.new("TextLabel", frame)
-hpLabel.Size, hpLabel.Position = UDim2.new(1, -20, 0, 28), UDim2.new(0, 10, 0, 125)
+local hpLabel = Instance.new("TextLabel")
+hpLabel.Parent = frame
+hpLabel.Size = UDim2.new(1, -20, 0, 28)
+hpLabel.Position = UDim2.new(0, 10, 0, 125)
 hpLabel.Text = "Máu mục tiêu: ..."
 hpLabel.TextColor3 = Color3.fromRGB(255, 70, 70)
 hpLabel.BackgroundTransparency = 1
@@ -90,14 +128,18 @@ hpLabel.TextScaled = true
 hpLabel.Font = Enum.Font.GothamBold
 
 -- Auto Đánh + Noclip
-local autoBtn = Instance.new("TextButton", frame)
-autoBtn.Size, autoBtn.Position = UDim2.new(0.5, -15, 0, 35), UDim2.new(0, 10, 0, 160)
+local autoBtn = Instance.new("TextButton")
+autoBtn.Parent = frame
+autoBtn.Size = UDim2.new(0.5, -15, 0, 35)
+autoBtn.Position = UDim2.new(0, 10, 0, 160)
 autoBtn.Text = "BẬT: Auto Đánh"
 autoBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
 autoBtn.TextColor3 = Color3.new(1,1,1)
 
-local noclipBtn = Instance.new("TextButton", frame)
-noclipBtn.Size, noclipBtn.Position = UDim2.new(0.5, -15, 0, 35), UDim2.new(0.5, 5, 0, 160)
+local noclipBtn = Instance.new("TextButton")
+noclipBtn.Parent = frame
+noclipBtn.Size = UDim2.new(0.5, -15, 0, 35)
+noclipBtn.Position = UDim2.new(0.5, 5, 0, 160)
 noclipBtn.Text = "BẬT: Noclip"
 noclipBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
 noclipBtn.TextColor3 = Color3.new(1,1,1)
@@ -112,8 +154,10 @@ local function showDamage(target, dmg)
     billboard.StudsOffset = Vector3.new(0, 3, 0)
     billboard.Parent = target
 
-    local text = Instance.new("TextLabel", billboard)
-    text.Size = UDim2.new(1,0,1,0); text.BackgroundTransparency = 1
+    local text = Instance.new("TextLabel")
+    text.Parent = billboard
+    text.Size = UDim2.new(1,0,1,0)
+    text.BackgroundTransparency = 1
     text.Text = "-"..tostring(dmg)
     text.TextColor3 = Color3.fromRGB(255,0,0)
     text.TextScaled = true
@@ -194,7 +238,10 @@ RunService.Heartbeat:Connect(function(dt)
             lastHealth[currentTarget] = humanoid.Health
 
             if humanoid.Health <= 0 then
-                running, autoAttack, currentTarget, targetOffset = false, false, nil, Vector3.new()
+                running = false
+                autoAttack = false
+                currentTarget = nil
+                targetOffset = Vector3.new()
                 toggle.Text = "BẬT: Đánh Boss"
                 autoBtn.Text = "BẬT: Auto Đánh"
                 hpLabel.Text = "Máu mục tiêu: Đã chết"
@@ -208,12 +255,12 @@ RunService.Heartbeat:Connect(function(dt)
             local len = horizDir.Magnitude
             if len == 0 then len = 1 end
             targetOffset = horizDir.Unit * math.min(len, radius)
-            orbitAngle = math.atan2(targetOffset.Z, targetOffset.X) -- SỬA: tính sau khi gán targetOffset
+            orbitAngle = math.atan2(targetOffset.Z, targetOffset.X)
         end
 
         orbitAngle = orbitAngle + speed * dt
-        local offset = Vector3.new(math.cos(orbitAngle), 0, math.sin(orbitAngle)) * radius -- SỬA: tính offset riêng
-        local goalPos = targetHRP.Position + offset                                          -- SỬA: rồi mới cộng vào
+        local offset = Vector3.new(math.cos(orbitAngle), 0, math.sin(orbitAngle)) * radius
+        local goalPos = targetHRP.Position + offset
 
         TweenService:Create(hrp, TweenInfo.new(0.1), {CFrame = CFrame.new(goalPos, targetHRP.Position)}):Play()
 
@@ -224,7 +271,10 @@ RunService.Heartbeat:Connect(function(dt)
         hpLabel.Text = "Máu mục tiêu: " .. math.floor(humanoid.Health)
 
     elseif running then
-        running, autoAttack, currentTarget, targetOffset = false, false, nil, Vector3.new()
+        running = false
+        autoAttack = false
+        currentTarget = nil
+        targetOffset = Vector3.new()
         toggle.Text = "BẬT: Đánh Boss"
         autoBtn.Text = "BẬT: Auto Đánh"
         hpLabel.Text = "Máu mục tiêu: Không tìm thấy"
@@ -269,35 +319,20 @@ end)
 disInput.FocusLost:Connect(function()
     radius = tonumber(disInput.Text) or radius
 end)
+
 spdInput.FocusLost:Connect(function()
     speed = tonumber(spdInput.Text) or speed
 end)
 
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local RunService = game:GetService("RunService")
+local autoCollect = false
 
-local autoCollect = true
-
-RunService.RenderStepped:Connect(function()
-    if not autoCollect then return end
-    for _, obj in pairs(workspace:GetDescendants()) do
-        if obj:IsA("ProximityPrompt") and (obj.Parent.Name == "Cash" or obj.Parent.Name == "Chest") then
-            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-            if hrp and (hrp.Position - obj.Parent.Position).Magnitude <= 100 then
-                pcall(function() fireproximityprompt(obj) end)
-            end
-        end
-    end
-end)
-
-local collectBtn = Instance.new("TextButton", frame)
-collectBtn.Size, collectBtn.Position = UDim2.new(1, -20, 0, 35), UDim2.new(0, 10, 0, 200)
+local collectBtn = Instance.new("TextButton")
+collectBtn.Parent = frame
+collectBtn.Size = UDim2.new(1, -20, 0, 35)
+collectBtn.Position = UDim2.new(0, 10, 0, 200)
 collectBtn.Text = "BẬT: Auto Nhặt"
 collectBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
 collectBtn.TextColor3 = Color3.new(1,1,1)
-
-local autoCollect = false
 
 collectBtn.MouseButton1Click:Connect(function()
     autoCollect = not autoCollect
@@ -306,8 +341,7 @@ end)
 
 RunService.RenderStepped:Connect(function()
     if not autoCollect then return end
-    local player = lp
-    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    local hrp = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("ProximityPrompt") and (obj.Parent.Name == "Cash" or obj.Parent.Name == "Chest") then
@@ -318,3 +352,16 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
+
+toggleGuiBtn.MouseButton1Click:Connect(function()
+    frame.Visible = not frame.Visible
+    if frame.Visible then
+        TweenService:Create(frame, TweenInfo.new(0.3), {Position = UDim2.new(0.5, -130, 0.5, -110)}):Play()
+    else
+        TweenService:Create(frame, TweenInfo.new(0.3), {Position = UDim2.new(0.5, -130, -1, -110)}):Play()
+    end
+end)
+
+local function setToggleButtonImage(imageId)
+    toggleGuiBtn.Image = "rbxassetid://" .. tostring(imageId)
+end
