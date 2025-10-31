@@ -1,0 +1,413 @@
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "PhongDanToggle"
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 220, 0, 150)
+MainFrame.Position = UDim2.new(0, 20, 0, 20)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+MainFrame.BorderSizePixel = 0
+MainFrame.BackgroundTransparency = 0.05
+MainFrame.Parent = ScreenGui
+
+local Gradient = Instance.new("UIGradient")
+Gradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 45)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 30))
+})
+Gradient.Rotation = 45
+Gradient.Parent = MainFrame
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = MainFrame
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(80, 80, 120)
+UIStroke.Thickness = 2
+UIStroke.Transparency = 0.3
+UIStroke.Parent = MainFrame
+
+local Icon = Instance.new("ImageLabel")
+Icon.Name = "Icon"
+Icon.Size = UDim2.new(0, 24, 0, 24)
+Icon.Position = UDim2.new(0, 15, 0, 13)
+Icon.BackgroundTransparency = 1
+Icon.Image = "rbxassetid://10723385058"
+Icon.Parent = MainFrame
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "TitleLabel"
+TitleLabel.Size = UDim2.new(0, 150, 0, 30)
+TitleLabel.Position = UDim2.new(0, 45, 0, 10)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "PHONG ĐẦN"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 16
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = MainFrame
+
+local SubtitleLabel = Instance.new("TextLabel")
+SubtitleLabel.Name = "SubtitleLabel"
+SubtitleLabel.Size = UDim2.new(0, 150, 0, 20)
+SubtitleLabel.Position = UDim2.new(0, 45, 0, 30)
+SubtitleLabel.BackgroundTransparency = 1
+SubtitleLabel.Text = "Boost Mode"
+SubtitleLabel.TextColor3 = Color3.fromRGB(180, 180, 200)
+SubtitleLabel.TextSize = 12
+SubtitleLabel.Font = Enum.Font.Gotham
+SubtitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+SubtitleLabel.Parent = MainFrame
+
+local FPSLabel = Instance.new("TextLabel")
+FPSLabel.Name = "FPSLabel"
+FPSLabel.Size = UDim2.new(0, 180, 0, 20)
+FPSLabel.Position = UDim2.new(0, 20, 0, 55)
+FPSLabel.BackgroundTransparency = 1
+FPSLabel.Text = "FPS: --"
+FPSLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
+FPSLabel.TextSize = 14
+FPSLabel.Font = Enum.Font.GothamBold
+FPSLabel.TextXAlignment = Enum.TextXAlignment.Left
+FPSLabel.Parent = MainFrame
+
+local ToggleBackground = Instance.new("Frame")
+ToggleBackground.Name = "ToggleBackground"
+ToggleBackground.Size = UDim2.new(0, 180, 0, 50)
+ToggleBackground.Position = UDim2.new(0, 20, 0, 80)
+ToggleBackground.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+ToggleBackground.BorderSizePixel = 0
+ToggleBackground.Parent = MainFrame
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 8)
+ToggleCorner.Parent = ToggleBackground
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Size = UDim2.new(0, 80, 0, 40)
+ToggleButton.Position = UDim2.new(0, 5, 0, 5)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(220, 80, 80)
+ToggleButton.Text = "OFF"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 14
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.Parent = ToggleBackground
+
+local ButtonCorner = Instance.new("UICorner")
+ButtonCorner.CornerRadius = UDim.new(0, 6)
+ButtonCorner.Parent = ToggleButton
+
+local ButtonStroke = Instance.new("UIStroke")
+ButtonStroke.Color = Color3.fromRGB(255, 255, 255)
+ButtonStroke.Thickness = 1.5
+ButtonStroke.Transparency = 0.5
+ButtonStroke.Parent = ToggleButton
+
+local StatusLight = Instance.new("Frame")
+StatusLight.Name = "StatusLight"
+StatusLight.Size = UDim2.new(0, 8, 0, 8)
+StatusLight.Position = UDim2.new(0, 160, 0, 21)
+StatusLight.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+StatusLight.BorderSizePixel = 0
+StatusLight.Parent = ToggleBackground
+
+local StatusCorner = Instance.new("UICorner")
+StatusCorner.CornerRadius = UDim.new(1, 0)
+StatusCorner.Parent = StatusLight
+
+local StatusText = Instance.new("TextLabel")
+StatusText.Name = "StatusText"
+StatusText.Size = UDim2.new(0, 60, 0, 20)
+StatusText.Position = UDim2.new(0, 95, 0, 15)
+StatusText.BackgroundTransparency = 1
+StatusText.Text = "INACTIVE"
+StatusText.TextColor3 = Color3.fromRGB(255, 100, 100)
+StatusText.TextSize = 12
+StatusText.Font = Enum.Font.GothamBold
+StatusText.Parent = ToggleBackground
+
+local isEnabled = false
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+local frameCount = 0
+local fps = 0
+local lastTime = 0
+local antiAFKEnabled = false
+local afkConnection = nil
+
+local function updateFPS()
+    frameCount = frameCount + 1
+    local currentTime = tick()
+    
+    if currentTime - lastTime >= 1 then
+        fps = math.floor(frameCount / (currentTime - lastTime))
+        frameCount = 0
+        lastTime = currentTime
+        
+        if fps >= 60 then
+            FPSLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+        elseif fps >= 30 then
+            FPSLabel.TextColor3 = Color3.fromRGB(255, 255, 100)
+        else
+            FPSLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        end
+        
+        FPSLabel.Text = "FPS: " .. fps
+    end
+end
+
+local function enableAntiAFK()
+    if afkConnection then
+        afkConnection:Disconnect()
+    end
+    
+    afkConnection = game:GetService("Players").LocalPlayer.Idled:Connect(function()
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.W, false, game)
+        task.wait(0.1)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.W, false, game)
+    end)
+    antiAFKEnabled = true
+end
+
+local function disableAntiAFK()
+    if afkConnection then
+        afkConnection:Disconnect()
+        afkConnection = nil
+    end
+    antiAFKEnabled = false
+end
+
+RunService.Heartbeat:Connect(updateFPS)
+
+function smoothToggle(state)
+    local goal = {}
+    
+    if state then
+        goal.Position = UDim2.new(0, 95, 0, 5)
+        goal.BackgroundColor3 = Color3.fromRGB(80, 220, 100)
+        ToggleButton.Text = "ON"
+        StatusLight.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+        StatusText.Text = "ACTIVE"
+        StatusText.TextColor3 = Color3.fromRGB(50, 255, 50)
+        
+        local glowTween = TweenService:Create(StatusLight, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, true), {
+            Size = UDim2.new(0, 12, 0, 12),
+            BackgroundTransparency = 0.2
+        })
+        glowTween:Play()
+    else
+        goal.Position = UDim2.new(0, 5, 0, 5)
+        goal.BackgroundColor3 = Color3.fromRGB(220, 80, 80)
+        ToggleButton.Text = "OFF"
+        StatusLight.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        StatusText.Text = "INACTIVE"
+        StatusText.TextColor3 = Color3.fromRGB(255, 100, 100)
+    end
+    
+    local tween = TweenService:Create(ToggleButton, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), goal)
+    tween:Play()
+end
+
+local function saveState()
+    if not script:FindFirstChild("PerformanceState") then
+        local stateValue = Instance.new("BoolValue")
+        stateValue.Name = "PerformanceState"
+        stateValue.Value = isEnabled
+        stateValue.Parent = script
+    else
+        script.PerformanceState.Value = isEnabled
+    end
+end
+
+local function loadState()
+    if script:FindFirstChild("PerformanceState") then
+        isEnabled = script.PerformanceState.Value
+        smoothToggle(isEnabled)
+        if isEnabled then
+            enablePerformanceMode()
+        end
+    end
+end
+
+function enablePerformanceMode()
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "PHONG ĐẦN MODE",
+        Text = "Đã bật chế độ hiệu suất cao + Anti AFK",
+        Duration = 3,
+        Icon = "rbxassetid://10723385058"
+    })
+    
+    enableAntiAFK()
+    
+    for i,v in pairs(game.Workspace:GetDescendants()) do
+        if v.ClassName == 'Decal' or (v.ClassName == "Part" and v.Material == "Plastic") then
+           v:Destroy()
+        end
+    end
+
+    local Lighting = game:GetService("Lighting")
+    local Terrain = workspace:FindFirstChildOfClass("Terrain")
+
+    if Terrain then
+        Terrain.WaterWaveSize = 0
+        Terrain.WaterWaveSpeed = 0
+        Terrain.WaterReflectance = 0
+        Terrain.WaterTransparency = 0
+    end
+
+    Lighting.GlobalShadows = false
+    Lighting.FogEnd = 9e9
+
+    pcall(function()
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+    end)
+
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("Part") or v:IsA("UnionOperation") or v:IsA("MeshPart") or v:IsA("CornerWedgePart") or v:IsA("TrussPart") then
+            v.Material = Enum.Material.Plastic
+            v.Reflectance = 0
+        elseif v:IsA("Decal") then
+            v.Transparency = 1
+        elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+            v.Lifetime = NumberRange.new(0)
+        elseif v:IsA("Explosion") then
+            v.BlastPressure = 1
+            v.BlastRadius = 1
+        end
+    end
+
+    for _, v in pairs(Lighting:GetDescendants()) do
+        if v:IsA("BlurEffect") or v:IsA("SunRaysEffect") or v:IsA("ColorCorrectionEffect") or v:IsA("BloomEffect") or v:IsA("DepthOfFieldEffect") then
+            v.Enabled = false
+        end
+    end
+
+    workspace.DescendantAdded:Connect(function(child)
+        task.spawn(function()
+            if child:IsA("ForceField") or child:IsA("Sparkles") or child:IsA("Smoke") or child:IsA("Fire") then
+                RunService.Heartbeat:Wait()
+                child:Destroy()
+            end
+        end)
+    end)
+    
+    game:GetService("RunService"):Set3dRenderingEnabled(false)
+end
+
+function disablePerformanceMode()
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "PHONG ĐẦN MODE",
+        Text = "Đã tắt chế độ hiệu suất cao",
+        Duration = 3,
+        Icon = "rbxassetid://10723385058"
+    })
+    
+    disableAntiAFK()
+    
+    game:GetService("RunService"):Set3dRenderingEnabled(true)
+    
+    local Lighting = game:GetService("Lighting")
+    local Terrain = workspace:FindFirstChildOfClass("Terrain")
+    
+    if Terrain then
+        Terrain.WaterWaveSize = 0.05
+        Terrain.WaterWaveSpeed = 10
+        Terrain.WaterReflectance = 0.5
+        Terrain.WaterTransparency = 0.5
+    end
+    
+    Lighting.GlobalShadows = true
+    Lighting.FogEnd = 100000
+    
+    pcall(function()
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level21
+    end)
+end
+
+ToggleButton.MouseButton1Click:Connect(function()
+    isEnabled = not isEnabled
+    smoothToggle(isEnabled)
+    saveState()
+    
+    if isEnabled then
+        enablePerformanceMode()
+    else
+        disablePerformanceMode()
+    end
+end)
+
+ToggleButton.MouseEnter:Connect(function()
+    local hoverTween = TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
+        BackgroundTransparency = 0
+    })
+    hoverTween:Play()
+end)
+
+ToggleButton.MouseLeave:Connect(function()
+    local leaveTween = TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
+        BackgroundTransparency = 0
+    })
+    leaveTween:Play()
+end)
+
+MainFrame.MouseEnter:Connect(function()
+    local hoverTween = TweenService:Create(MainFrame, TweenInfo.new(0.3), {
+        BackgroundTransparency = 0.02
+    })
+    hoverTween:Play()
+end)
+
+MainFrame.MouseLeave:Connect(function()
+    local leaveTween = TweenService:Create(MainFrame, TweenInfo.new(0.3), {
+        BackgroundTransparency = 0.05
+    })
+    leaveTween:Play()
+end)
+
+local dragging = false
+local dragInput, dragStart, startPos
+
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        
+        local shrinkTween = TweenService:Create(MainFrame, TweenInfo.new(0.1), {
+            Size = UDim2.new(0, 215, 0, 148)
+        })
+        shrinkTween:Play()
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+                local expandTween = TweenService:Create(MainFrame, TweenInfo.new(0.1), {
+                    Size = UDim2.new(0, 220, 0, 150)
+                })
+                expandTween:Play()
+            end
+        end)
+    end
+end)
+
+MainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+loadState()
